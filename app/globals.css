@@ -5,39 +5,69 @@
   --background: #fdfcfb; 
   --foreground: #1a1a1a;
   
-  /* Deep Coral Accent (20-40% Value/Level) */
+  /* Primary Brand - Deep Coral */
+  --primary: #bd4131;
+  --primary-foreground: #ffffff;
+  
+  /* UI Elements */
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  
+  /* Accent Colors */
   --accent: #bd4131;
   --accent-foreground: #ffffff;
+  --accent-muted: rgba(189, 65, 49, 0.1);
   
-  /* UI Borders & Muted Text */
+  /* Feedback & Neutral */
   --border: #e2e2e2;
-  --muted: #64748b;
-  --muted-foreground: #526175;
+  --input: #e2e2e2;
+  --ring: #bd4131;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  
+  --radius: 1rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-muted: var(--accent-muted);
   --color-border: var(--border);
   --color-muted: var(--muted);
-  
-  /* Ensure Tailwind can use our custom accent */
-  --color-accent-dark: #8a2f24;
-  --color-accent-light: #d66355;
+  --color-muted-foreground: var(--muted-foreground);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     /* Low-Fatigue Dark Theme */
-    --background: #0f1111;
-    --foreground: #e2e2e2;
-    --border: #262626;
-    --muted: #94a3b8;
+    --background: #0a0a0a;
+    --foreground: #f2f2f2;
     
-    /* Keep the accent but slightly desaturate for dark mode eyes */
-    --accent: #ca4d3d; 
+    --primary: #ca4d3d;
+    --primary-foreground: #ffffff;
+    
+    --card: #141414;
+    --card-foreground: #f2f2f2;
+    --popover: #141414;
+    --popover-foreground: #f2f2f2;
+    
+    --accent: #ca4d3d;
+    --accent-foreground: #ffffff;
+    --accent-muted: rgba(202, 77, 61, 0.15);
+    
+    --border: #262626;
+    --input: #262626;
+    --ring: #ca4d3d;
+    --muted: #1a1a1a;
+    --muted-foreground: #94a3b8;
   }
 }
 
@@ -49,7 +79,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar for Focused Reading */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -67,13 +97,11 @@ body {
   background: var(--accent);
 }
 
-/* Auto-Dimming Helper Utility */
-.focus-dimmed {
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
+/* Transitions */
+* {
+  border-color: var(--border);
 }
 
-.focus-active {
-  opacity: 1;
-  transition: opacity 0.3s ease;
+.transition-theme {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

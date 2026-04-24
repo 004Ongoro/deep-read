@@ -37,82 +37,84 @@ export default function LibraryClient({ initialDocuments }: LibraryClientProps) 
   );
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <header className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    <div className="mx-auto max-w-7xl transition-theme">
+      <header className="mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">My Library</h1>
-          <p className="mt-2 text-gray-500">All your learning materials in one place.</p>
+          <h1 className="text-5xl font-black text-foreground tracking-tight">My Library</h1>
+          <p className="mt-3 text-lg text-muted-foreground">All your learning materials in one place, optimized for depth.</p>
         </div>
         
         <div className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/50" size={22} />
           <input 
             type="text" 
             placeholder="Search your library..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-2xl border border-gray-100 bg-white py-3 pl-10 pr-4 shadow-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-all"
+            className="w-full rounded-[20px] border border-border bg-card py-4 pl-12 pr-6 shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all text-foreground"
           />
         </div>
       </header>
 
-      <div className="grid gap-4">
+      <div className="grid gap-6">
         {filteredDocuments.length > 0 ? (
           filteredDocuments.map((doc) => (
-            <div key={doc._id} className="group flex flex-col md:flex-row items-center justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-center gap-6 w-full md:w-auto">
-                <div className="rounded-xl bg-accent/10 p-4 text-accent">
-                  <FileText size={24} />
+            <div key={doc._id} className="group flex flex-col md:flex-row items-center justify-between rounded-[32px] border border-border bg-card p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-accent/5 hover:border-accent/20">
+              <div className="flex items-center gap-8 w-full md:w-auto">
+                <div className="rounded-2xl bg-accent-muted p-5 text-accent group-hover:scale-110 transition-transform">
+                  <FileText size={28} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 group-hover:text-accent transition-colors text-lg">
+                  <h3 className="font-bold text-foreground group-hover:text-accent transition-colors text-xl line-clamp-1">
                     {doc.title}
                   </h3>
-                  <div className="mt-1 flex items-center gap-4 text-sm text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Clock size={14} /> Updated {new Date(doc.updatedAt).toLocaleDateString()}
+                  <div className="mt-2 flex items-center gap-6 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <Clock size={16} /> Updated {new Date(doc.updatedAt).toLocaleDateString()}
                     </span>
-                    <span className="font-bold text-accent/70 uppercase text-[10px] tracking-widest">
+                    <span className="font-black text-accent/80 uppercase text-[10px] tracking-[0.2em]">
                       {doc.readingProgress}% COMPLETE
                     </span>
                   </div>
                 </div>
               </div>
               
-              <div className="mt-6 md:mt-0 flex items-center gap-4 w-full md:w-auto">
-                <div className="hidden lg:block w-48 h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div className="mt-8 md:mt-0 flex items-center gap-8 w-full md:w-auto">
+                <div className="hidden lg:block w-48 h-2.5 rounded-full bg-muted overflow-hidden">
                   <div 
-                    className="h-full bg-accent transition-all duration-500" 
+                    className="h-full bg-accent transition-all duration-1000 ease-in-out" 
                     style={{ width: `${doc.readingProgress}%` }}
                   />
                 </div>
-                <div className="flex items-center gap-2 flex-1 md:flex-none">
+                <div className="flex items-center gap-3 flex-1 md:flex-none">
                   <button 
                     onClick={() => handleDelete(doc._id)}
-                    className="rounded-xl border border-gray-100 p-3 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                    className="rounded-2xl border border-border p-4 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={20} />
                   </button>
                   <Link 
                     href={`/read/${doc._id}`}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gray-50 px-6 py-3 text-sm font-bold text-gray-600 transition-all hover:bg-accent hover:text-white"
+                    className="flex-1 flex items-center justify-center gap-3 rounded-2xl bg-muted px-8 py-4 text-base font-bold text-foreground transition-all hover:bg-accent hover:text-accent-foreground shadow-sm active:scale-95"
                   >
-                    Read Now <ArrowRight size={16} />
+                    Read Now <ArrowRight size={18} />
                   </Link>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-20 text-center">
-            <FileText size={48} className="text-gray-300 mb-4" />
-            <h3 className="text-xl font-bold text-gray-900">{searchQuery ? "No matches found" : "No documents yet"}</h3>
-            <p className="text-gray-500 max-w-xs mx-auto mt-2">
-              {searchQuery ? "Try a different search term." : "Upload your first PDF on the dashboard to start building your library."}
+          <div className="flex flex-col items-center justify-center rounded-[48px] border-2 border-dashed border-border bg-muted/20 py-32 text-center transition-theme">
+            <div className="rounded-full bg-card p-8 shadow-sm ring-1 ring-border mb-8">
+              <FileText size={56} className="text-muted-foreground/20" />
+            </div>
+            <h3 className="text-2xl font-black text-foreground">{searchQuery ? "No matches found" : "Your library is empty"}</h3>
+            <p className="text-muted-foreground max-w-sm mx-auto mt-4 text-lg">
+              {searchQuery ? `We couldn't find anything matching "${searchQuery}". Try a different term.` : "Start your collection by uploading your first PDF on the dashboard."}
             </p>
             {!searchQuery && (
-              <Link href="/" className="mt-6 font-bold text-accent hover:underline">
-                Go to Dashboard
+              <Link href="/" className="mt-10 inline-flex items-center gap-2 font-black text-accent hover:underline text-lg">
+                Go to Dashboard <ArrowRight size={20} />
               </Link>
             )}
           </div>

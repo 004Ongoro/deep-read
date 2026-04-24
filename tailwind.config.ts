@@ -7,14 +7,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        accent: {
-          DEFAULT: "#bd4131", 
-          light: "#d66355",
-          dark: "#8a2f24",
-        },
-        background: "#fdfcfb",
-      },
+      animation: {
+        'bounce-slow': 'bounce 3s linear infinite',
+      }
     },
   },
   plugins: [],

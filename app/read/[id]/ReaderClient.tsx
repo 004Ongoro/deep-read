@@ -25,7 +25,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   const [extractedPages, setExtractedPages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(document.currentChapter || 1);
   const [isLoading, setIsLoading] = useState(true);
-  const [fontSize, setFontSize] = useState(18);
+  const [fontSize, setFontSize] = useState(20);
   const [theme, setTheme] = useState<"light" | "dark" | "sepia">("light");
   const [isBionic, setIsBionic] = useState(false);
   const [isReferenceView, setIsReferenceView] = useState(false);
@@ -102,122 +102,157 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   const applyBionic = (text: string) => {
     if (!isBionic) return text;
     return text.split(' ').map((word) => {
-      if (word.length <= 3) return `<b class="font-bold">${word}</b>`;
+      if (word.length <= 3) return `<b class="font-black text-accent">${word}</b>`;
       const mid = Math.ceil(word.length / 2);
-      return `<b class="font-bold">${word.slice(0, mid)}</b>${word.slice(mid)}`;
+      return `<b class="font-black text-accent">${word.slice(0, mid)}</b>${word.slice(mid)}`;
     }).join(' ');
   };
 
   const themes = {
-    light: "bg-white text-gray-900",
-    dark: "bg-gray-950 text-gray-100",
-    sepia: "bg-[#f4ecd8] text-[#5b4636]",
+    light: {
+      body: "bg-[#fdfcfb] text-[#1a1a1a]",
+      nav: "bg-[#fdfcfb]/80 border-[#e2e2e2]",
+      button: "hover:bg-black/5 text-muted-foreground",
+      activeButton: "bg-accent text-white"
+    },
+    dark: {
+      body: "bg-[#0a0a0a] text-[#f2f2f2]",
+      nav: "bg-[#0a0a0a]/80 border-[#262626]",
+      button: "hover:bg-white/10 text-[#94a3b8]",
+      activeButton: "bg-accent text-white"
+    },
+    sepia: {
+      body: "bg-[#f4ecd8] text-[#5b4636]",
+      nav: "bg-[#f4ecd8]/80 border-[#d3c6a6]",
+      button: "hover:bg-black/5 text-[#8c7a6b]",
+      activeButton: "bg-[#5b4636] text-[#f4ecd8]"
+    },
   };
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin mx-auto rounded-full border-4 border-accent border-t-transparent"></div>
-          <p className="text-gray-500 font-medium">Preparing your focus environment...</p>
+          <div className="mb-6 h-16 w-16 animate-spin mx-auto rounded-full border-4 border-accent border-t-transparent shadow-2xl"></div>
+          <p className="text-muted-foreground font-black tracking-widest uppercase text-xs">Calibrating Focus Environment...</p>
         </div>
       </div>
     );
   }
 
+  const currentT = themes[theme];
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${themes[theme]}`}>
-      <nav className="fixed top-0 z-50 w-full border-b border-gray-100/10 backdrop-blur-md px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-2 hover:bg-gray-500/10 rounded-full transition-colors">
-            <ArrowLeft size={20} />
+    <div className={`min-h-screen transition-all duration-500 ease-in-out ${currentT.body}`}>
+      <nav className={`fixed top-0 z-50 w-full border-b backdrop-blur-xl px-6 py-4 flex items-center justify-between transition-all duration-500 ${currentT.nav}`}>
+        <div className="flex items-center gap-6">
+          <Link href="/library" className={`p-3 rounded-2xl transition-all ${currentT.button}`}>
+            <ArrowLeft size={22} />
           </Link>
-          <h1 className="font-bold truncate max-w-[200px] sm:max-w-md">{document.title}</h1>
+          <h1 className="font-black truncate max-w-[150px] sm:max-w-md text-sm uppercase tracking-widest">{document.title}</h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsReferenceView(!isReferenceView)}
-            className={`p-2 rounded-full transition-colors ${isReferenceView ? 'bg-accent text-white' : 'hover:bg-gray-500/10'}`}
+            className={`p-3 rounded-2xl transition-all ${isReferenceView ? currentT.activeButton : currentT.button}`}
             title="Reference View (Source PDF)"
           >
-            <FileText size={20} />
+            <FileText size={22} />
           </button>
           <button 
             onClick={() => setIsBionic(!isBionic)}
-            className={`p-2 rounded-full transition-colors ${isBionic ? 'bg-accent text-white' : 'hover:bg-gray-500/10'}`}
+            className={`p-3 rounded-2xl transition-all ${isBionic ? currentT.activeButton : currentT.button}`}
             title="Bionic Reading"
           >
-            <BookOpen size={20} />
+            <BookOpen size={22} />
           </button>
           <button 
             onClick={() => setTheme(theme === "light" ? "sepia" : theme === "sepia" ? "dark" : "light")}
-            className="p-2 hover:bg-gray-500/10 rounded-full transition-colors"
+            className={`p-3 rounded-2xl transition-all ${currentT.button}`}
           >
-            {theme === "light" ? <Sun size={20} /> : theme === "sepia" ? <BookOpen size={20} /> : <Moon size={20} />}
+            {theme === "light" ? <Sun size={22} /> : theme === "sepia" ? <BookOpen size={22} /> : <Moon size={22} />}
           </button>
-          <button 
-            onClick={() => setFontSize(prev => Math.min(prev + 2, 32))}
-            className="p-2 hover:bg-gray-500/10 rounded-full transition-colors"
-          >
-            <Type size={20} />
-          </button>
-          <button className="p-2 hover:bg-gray-500/10 rounded-full transition-colors">
-            <Settings size={20} />
-          </button>
+          <div className="flex items-center gap-1 bg-muted/20 rounded-2xl p-1">
+            <button 
+              onClick={() => setFontSize(prev => Math.max(prev - 2, 12))}
+              className={`p-2 rounded-xl transition-all ${currentT.button}`}
+            >
+              <Type size={16} />
+            </button>
+            <button 
+              onClick={() => setFontSize(prev => Math.min(prev + 2, 40))}
+              className={`p-2 rounded-xl transition-all ${currentT.button}`}
+            >
+              <Type size={24} />
+            </button>
+          </div>
         </div>
       </nav>
 
-      <main className="mx-auto max-w-5xl px-6 pt-24 pb-32">
+      <main className="mx-auto max-w-4xl px-8 pt-32 pb-40">
         {isReferenceView ? (
-          <div className="h-[calc(100vh-160px)] w-full rounded-2xl overflow-hidden border border-gray-100/20 shadow-2xl">
+          <div className="h-[calc(100vh-200px)] w-full rounded-[32px] overflow-hidden border border-border shadow-2xl transition-all duration-500">
             {pdfUrl && (
               <iframe 
                 src={`${pdfUrl}#page=${currentPage}`} 
-                className="w-full h-full"
+                className={`w-full h-full ${theme === 'dark' ? 'invert hue-rotate-180 brightness-90' : ''}`}
                 title="Source PDF"
               />
             )}
           </div>
         ) : (
           <div 
-            className="prose prose-lg mx-auto leading-relaxed" 
-            style={{ fontSize: `${fontSize}px` }}
+            className="mx-auto leading-[1.7] font-medium transition-all duration-500" 
+            style={{ 
+              fontSize: `${fontSize}px`,
+              maxWidth: theme === 'dark' ? '800px' : '750px' 
+            }}
           >
-            {extractedPages[currentPage - 1]?.split('\n').map((para, i) => (
+            {extractedPages[currentPage - 1]?.split('\n').filter(p => p.trim()).map((para, i) => (
               <p 
                 key={i} 
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
-                className={`mb-6 transition-all duration-300 ${
+                className={`mb-10 transition-all duration-500 ease-out cursor-default ${
                   hoveredIndex !== null && hoveredIndex !== i 
-                    ? 'opacity-40 blur-[0.5px]' 
-                    : 'opacity-100'
-                }`}                dangerouslySetInnerHTML={{ __html: applyBionic(para) }}
+                    ? 'opacity-20 blur-[1px] scale-[0.98]' 
+                    : 'opacity-100 scale-100'
+                }`}
+                dangerouslySetInnerHTML={{ __html: applyBionic(para) }}
               />
             ))}
           </div>
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 w-full border-t border-gray-100/10 backdrop-blur-md p-4">
+      <div className={`fixed bottom-0 left-0 w-full border-t backdrop-blur-xl p-6 transition-all duration-500 ${currentT.nav}`}>
         <div className="mx-auto max-w-3xl flex items-center justify-between">
           <button 
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-500/10 disabled:opacity-30 transition-all"
+            onClick={() => {
+              setCurrentPage((p: number) => Math.max(1, p - 1));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest disabled:opacity-20 transition-all ${currentT.button}`}
           >
-            <ChevronLeft size={20} /> Previous
+            <ChevronLeft size={20} /> Prev
           </button>
           
-          <div className="text-sm font-medium">
-            Page <span className="font-bold">{currentPage}</span> of {extractedPages.length}
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Progress</div>
+            <div className="text-sm font-black tabular-nums">
+              <span className="text-accent">{currentPage}</span> <span className="opacity-30">/</span> {extractedPages.length}
+            </div>
           </div>
 
           <button 
             disabled={currentPage === extractedPages.length}
-            onClick={() => setCurrentPage((p: number) => Math.min(extractedPages.length, p + 1))}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-500/10 disabled:opacity-30 transition-all"
+            onClick={() => {
+              setCurrentPage((p: number) => Math.min(extractedPages.length, p + 1));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest disabled:opacity-20 transition-all ${currentT.button}`}
           >
             Next <ChevronRight size={20} />
           </button>

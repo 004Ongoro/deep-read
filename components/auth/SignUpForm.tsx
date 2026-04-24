@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Mail, Lock, User as UserIcon, Loader2 } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Loader2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
@@ -40,59 +40,92 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4 bg-background">
-      <div className="flex w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl shadow-accent/5 border border-gray-100">
+    <div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4 bg-background transition-theme">
+      <div className="flex w-full max-w-5xl overflow-hidden rounded-[40px] bg-card shadow-2xl shadow-accent/10 border border-border">
         
-        {/* Right Form Side First on Mobile */}
-        <div className="w-full p-8 md:w-1/2 lg:p-16">
+        {/* Left Side Illustration */}
+        <div className="hidden w-1/2 flex-col justify-center bg-muted/30 p-12 md:flex border-r border-border">
+           <div className="relative w-full h-[350px]">
+             <Image src="/login.svg" alt="Reading" fill className="object-contain dark:opacity-80" />
+           </div>
+           <div className="mt-12 text-center">
+            <h2 className="text-3xl font-black text-foreground italic">Start your journey.</h2>
+            <p className="mt-4 text-muted-foreground italic text-base max-w-sm mx-auto">Transform the way you interact with information. Built for those who read to learn.</p>
+          </div>
+        </div>
+
+        {/* Right Form Side */}
+        <div className="w-full p-10 md:w-1/2 lg:p-20">
           <div className="flex flex-col items-center md:items-start">
-            <Image src="/icon.png" alt="Icon" width={48} height={48} className="mb-6" />
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Create Account</h1>
-            <p className="mt-2 text-gray-500 text-sm">Join the community of deep readers.</p>
+            <Link href="/" className="mb-8 hover:scale-110 transition-transform">
+               <Image src="/logo.svg" alt="Deep Read" width={140} height={40} className="dark:invert" />
+            </Link>
+            <h1 className="text-4xl font-black text-foreground tracking-tight italic">Create Account</h1>
+            <p className="mt-3 text-lg text-muted-foreground">Join the community of deep readers.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            {error && <div className="text-red-500 text-xs font-bold">{error}</div>}
+          <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+            {error && (
+              <div className="rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500 border border-red-500/20">
+                {error}
+              </div>
+            )}
             
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Full Name</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Full Name</label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input name="name" type="text" className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 outline-none focus:border-accent" required />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+                <input 
+                  name="name" 
+                  type="text" 
+                  placeholder="John Doe"
+                  className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground" 
+                  required 
+                />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input name="email" type="email" className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 outline-none focus:border-accent" required />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+                <input 
+                  name="email" 
+                  type="email" 
+                  placeholder="name@example.com"
+                  className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground" 
+                  required 
+                />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase">Password</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input name="password" type="password" className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 outline-none focus:border-accent" required />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+                <input 
+                  name="password" 
+                  type="password" 
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground" 
+                  required 
+                />
               </div>
             </div>
 
-            <button disabled={isLoading} className="w-full rounded-xl bg-accent py-4 font-bold text-white mt-4 shadow-lg shadow-accent/20">
-              {isLoading ? <Loader2 className="animate-spin mx-auto" /> : "Start Reading"}
+            <button 
+              disabled={isLoading} 
+              className="group relative w-full overflow-hidden rounded-[20px] bg-accent py-5 font-black text-accent-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70 shadow-2xl shadow-accent/20 mt-4"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-3 text-lg">
+                {isLoading ? <Loader2 className="animate-spin" /> : <>Start Reading <ArrowRight size={20} /></>}
+              </span>
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
-            Already a member? <Link href="/auth/signin" className="font-bold text-accent">Sign In</Link>
+          <p className="mt-12 text-center text-base text-muted-foreground">
+            Already a member? <Link href="/auth/signin" className="font-black text-accent hover:underline">Sign In</Link>
           </p>
-        </div>
-
-        {/* Left Side Illustration */}
-        <div className="hidden w-1/2 flex-col justify-center bg-accent/5 p-12 md:flex border-l border-gray-50">
-           <div className="relative w-full h-[300px]">
-             <Image src="/login.svg" alt="Reading" fill className="object-contain" />
-           </div>
         </div>
       </div>
     </div>
