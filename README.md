@@ -1,4 +1,6 @@
-# Deep Read 
+<!-- Deploy Trigger: Updated theme and auth flow consistency -->
+# Deep Read
+ 
 **The Personal Learning Environment for Focused, Persistent Reading.**
 
 Deep Read is a production-grade web application designed to eliminate "Reading Fatigue." Traditional PDF readers and browsers treat documents as static images, forgetting your place and cluttering your focus. Deep Read transforms PDFs into a customizable, semantic reading experience that remembers exactly where you left off.
