@@ -32,7 +32,6 @@ export default async function LibraryPage() {
       <Navbar />
       
       <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        {/* @ts-expect-error - lean() documents are compatible with client IDocument interface */}
         <LibraryClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
       </main>
 

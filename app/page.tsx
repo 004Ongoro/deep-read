@@ -42,7 +42,6 @@ export default async function Dashboard() {
           </header>
 
           {/* Client-side logic for Upload & Interactions */}
-          {/* @ts-expect-error - lean() documents might have slightly different types than IDocument[] but they are compatible for the client */}
           <DashboardClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
         </div>
       </main>
