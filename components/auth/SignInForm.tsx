@@ -31,7 +31,9 @@ export default function SignInForm() {
       setError("Invalid email or password. Please try again.");
       setIsLoading(false);
     } else {
-      router.push("/");
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get("callbackUrl") || "/";
+      router.push(callbackUrl);
       router.refresh();
     }
   };

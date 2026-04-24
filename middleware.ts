@@ -1,31 +1,32 @@
-import { getToken } from "next-auth/jwt";
+import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ 
-    req, 
-    secret: process.env.NEXTAUTH_SECRET 
-  });
-  
-  const { pathname } = req.nextUrl;
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
+    const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
 
-  // Protect internal app routes
-  if (!token && (pathname.startsWith("/library") || pathname.startsWith("/read"))) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/auth/signin";
-    // Optional: save the callback URL
-    url.searchParams.set("callbackUrl", req.url);
-    return NextResponse.redirect(url);
+    // Redirect logged-in users away from auth pages (login/signup)
+    if (isAuthPage && token) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
+        // Always allow access to auth pages so users can log in
+        if (isAuthPage) return true;
+        // Require a token for all other matched routes (/library, /read)
+        return !!token;
+      },
+    },
+    pages: {
+      signIn: "/auth/signin",
+    },
   }
-
-  // Prevent logged in users from seeing auth pages
-  if (token && pathname.startsWith("/auth/")) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  return NextResponse.next();
-}
+);
 
 export const config = { 
   matcher: ["/library/:path*", "/read/:path*", "/auth/:path*"] 
