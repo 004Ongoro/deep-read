@@ -4,9 +4,9 @@ import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
 import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
-import DashboardClient from "@/components/dashboard/DashboardClient";
+import LibraryClient from "./LibraryClient";
 
-export default async function Dashboard() {
+export default async function LibraryPage() {
   const session = await getServerSession();
 
   if (!session?.user) {
@@ -15,7 +15,6 @@ export default async function Dashboard() {
 
   await connectToDatabase();
   
-  // Fetch user's reading list
   const documents = await DocumentModel.find({ 
     userId: (session.user as any).id 
   }).sort({ updatedAt: -1 }).lean();
@@ -25,17 +24,7 @@ export default async function Dashboard() {
       <Navbar />
       
       <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <header className="mb-10">
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-              Welcome back, <span className="text-accent">{session.user.name?.split(' ')[0]}</span>
-            </h1>
-            <p className="mt-2 text-gray-500">Pick up where your mind left off.</p>
-          </header>
-
-          {/* Client-side logic for Upload & Interactions */}
-          <DashboardClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
-        </div>
+        <LibraryClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
       </main>
 
       <Footer />
