@@ -7,5 +7,5 @@ export default withAuth({
 });
 
 export const config = { 
-  matcher: ["/library/:path*", "/read/:path*", "/api/documents/:path*"] 
+  matcher: ["/library/:path*", "/read/:path*"] 
 };

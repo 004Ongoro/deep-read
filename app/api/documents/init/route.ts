@@ -11,6 +11,7 @@ interface AuthUser {
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  console.log("POST /api/documents/init - Start");
   try {
     const session = await getServerSession(authOptions);
     console.log("Session in API:", session ? "Found" : "Missing");

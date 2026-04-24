@@ -29,7 +29,8 @@ export async function ingestDocument(file: File, userId: string) {
     userId: userId,
   };
 
-  const response = await fetch('/api/documents/init', {
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const response = await fetch(`${baseUrl}/api/documents/init`, {
     method: 'POST',
     body: JSON.stringify(documentData),
     headers: { 'Content-Type': 'application/json' },
