@@ -21,20 +21,31 @@ export default function SignInForm() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      console.log("Attempting sign in with:", email);
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password. Please try again.");
+      console.log("Sign in result:", result);
+
+      if (result?.error) {
+        console.error("Sign in error:", result.error);
+        setError("Invalid email or password. Please try again.");
+        setIsLoading(false);
+      } else {
+        const searchParams = new URLSearchParams(window.location.search);
+        const callbackUrl = searchParams.get("callbackUrl") || "/";
+        console.log("Sign in successful, redirecting to:", callbackUrl);
+        // Use window.location for a hard redirect to ensure the session is fully picked up
+        window.location.href = callbackUrl;
+      }
+    } catch (err) {
+      console.error("Unexpected sign in error:", err);
+      setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
-    } else {
-      const searchParams = new URLSearchParams(window.location.search);
-      const callbackUrl = searchParams.get("callbackUrl") || "/";
-      router.push(callbackUrl);
-      router.refresh();
     }
   };
 

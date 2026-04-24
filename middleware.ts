@@ -1,32 +1,31 @@
-import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const { pathname } = req.nextUrl;
+  
+  console.log(`Middleware: ${pathname} - Token: ${token ? "Yes" : "No"}`);
 
-    // Redirect logged-in users away from auth pages (login/signup)
-    if (isAuthPage && token) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
-        // Always allow access to auth pages so users can log in
-        if (isAuthPage) return true;
-        // Require a token for all other matched routes (/library, /read)
-        return !!token;
-      },
-    },
-    pages: {
-      signIn: "/auth/signin",
-    },
+  // Protect library and read routes
+  if (!token && (pathname.startsWith("/library") || pathname.startsWith("/read"))) {
+    console.log("Middleware: Redirecting to signin");
+    const signInUrl = new URL("/auth/signin", req.url);
+    signInUrl.searchParams.set("callbackUrl", req.url);
+    return NextResponse.redirect(signInUrl);
   }
-);
+
+  // Redirect logged-in users away from auth pages
+  if (token && pathname.startsWith("/auth")) {
+    console.log("Middleware: Redirecting logged-in user to home");
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  return NextResponse.next();
+}
+
+export default middleware;
 
 export const config = { 
   matcher: ["/library/:path*", "/read/:path*", "/auth/:path*"] 
