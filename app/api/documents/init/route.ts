@@ -2,20 +2,27 @@ import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 interface AuthUser {
   id: string;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("Session in API:", session ? "Found" : "Missing");
+    
     if (!session?.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, fileHash } = await req.json();
+    const body = await req.json();
+    console.log("Request body:", body);
+    
+    const { title, fileHash } = body;
 
     await connectToDatabase();
 

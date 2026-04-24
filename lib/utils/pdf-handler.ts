@@ -35,5 +35,17 @@ export async function ingestDocument(file: File, userId: string) {
     headers: { 'Content-Type': 'application/json' },
   });
 
-  return await response.json();
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`API Error (${response.status}):`, errorText);
+    throw new Error(`Server responded with ${response.status}: ${errorText.slice(0, 100)}`);
+  }
+
+  try {
+    return await response.json();
+  } catch (err) {
+    const text = await response.text();
+    console.error("Failed to parse JSON response:", text);
+    throw new Error("Invalid JSON response from server");
+  }
 }
