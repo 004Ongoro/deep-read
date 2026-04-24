@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
 import Navbar from "@/components/navigation/Navbar";
@@ -13,7 +14,7 @@ interface AuthUser {
 }
 
 export default async function Home() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     return <LandingPage />;

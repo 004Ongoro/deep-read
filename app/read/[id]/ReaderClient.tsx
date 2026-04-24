@@ -191,10 +191,9 @@ export default function ReaderClient({ document }: ReaderClientProps) {
                 onMouseLeave={() => setHoveredIndex(null)}
                 className={`mb-6 transition-all duration-300 ${
                   hoveredIndex !== null && hoveredIndex !== i 
-                    ? 'opacity-20 blur-[1px]' 
+                    ? 'opacity-40 blur-[0.5px]' 
                     : 'opacity-100'
-                }`}
-                dangerouslySetInnerHTML={{ __html: applyBionic(para) }}
+                }`}                dangerouslySetInnerHTML={{ __html: applyBionic(para) }}
               />
             ))}
           </div>

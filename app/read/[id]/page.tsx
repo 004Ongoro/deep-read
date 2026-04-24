@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect, notFound } from "next/navigation";
 import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
@@ -12,7 +13,7 @@ interface AuthUser {
 
 export default async function ReadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     redirect("/auth/signin");

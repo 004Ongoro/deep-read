@@ -114,7 +114,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
               <Book size={32} className="text-gray-300" />
             </div>
             <h3 className="mt-4 font-bold text-gray-900">Your library is empty</h3>
-            <p className="text-sm text-gray-500">Upload a PDF to start your deep reading session.</p>
+            <p className="text-sm text-gray-600">Upload a PDF to start your deep reading session.</p>
           </div>
         )}
       </section>
@@ -124,7 +124,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
         <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="max-w-md">
             <h2 className="text-3xl font-black tracking-tight">Add New Material</h2>
-            <p className="mt-2 text-accent-light brightness-150">
+            <p className="mt-2 text-white/90">
               Drop a PDF here. We&apos;ll strip the noise and prepare your focus environment.
             </p>
           </div>

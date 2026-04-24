@@ -8,7 +8,7 @@ export default function Footer() {
   // Minimal footer for logged-in users to maximize focus
   if (status === "authenticated") {
     return (
-      <footer className="border-t bg-white py-4 text-center text-[10px] uppercase tracking-widest text-gray-400">
+      <footer className="border-t bg-white py-4 text-center text-[10px] uppercase tracking-widest text-gray-500">
         &copy; {new Date().getFullYear()} Deep Read — Focused Learning Protocol Active.
       </footer>
     );

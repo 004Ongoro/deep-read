@@ -1,6 +1,5 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import connectToDatabase from "@/lib/db/mongodb";
 import { User } from "@/lib/models/User";
 import bcrypt from "bcryptjs";
@@ -11,9 +10,9 @@ interface AuthUser {
   name?: string | null;
 }
 
-const handler = NextAuth({
-  // @ts-expect-error - MongoDBAdapter expects a promise that resolves to a Db or MongoClient, but connectToDatabase might return slightly different type depending on mongoose version
-  adapter: MongoDBAdapter(connectToDatabase()),
+export const authOptions: NextAuthOptions = {
+  // We are using JWT for sessions, so the adapter is not strictly required for credentials provider
+  // and removing it can avoid potential connection/initialization issues during the login flow.
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -26,25 +25,30 @@ const handler = NextAuth({
           throw new Error("Missing email or password");
         }
 
-        await connectToDatabase();
-        
-        // Find user by email
-        const user = await User.findOne({ email: credentials.email });
-        if (!user || !user.password) {
-          throw new Error("No user found with this email");
-        }
+        try {
+          await connectToDatabase();
+          
+          // Find user by email
+          const user = await User.findOne({ email: credentials.email });
+          if (!user || !user.password) {
+            throw new Error("No user found with this email");
+          }
 
-        // Verify password
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) {
-          throw new Error("Incorrect password");
-        }
+          // Verify password
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) {
+            throw new Error("Incorrect password");
+          }
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-        };
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
+        }
       }
     })
   ],
@@ -70,6 +74,8 @@ const handler = NextAuth({
   pages: {
     signIn: "/auth/signin",
   }
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

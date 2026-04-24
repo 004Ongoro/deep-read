@@ -28,7 +28,7 @@ export default function LandingPage() {
                   Read deeper, <br />
                   <span className="text-accent italic">not faster.</span>
                 </h1>
-                <p className="mt-6 max-w-lg text-lg leading-relaxed text-gray-600">
+                <p className="mt-6 max-w-lg text-lg leading-relaxed text-gray-700">
                   The personal learning environment that transforms cluttered PDFs into 
                   focused, reflowable text. No distractions. No lost progress. Just you and the material.
                 </p>
@@ -121,7 +121,7 @@ export default function LandingPage() {
                   <h2 className="text-4xl font-black leading-tight sm:text-5xl">
                     Ready to reclaim your focus?
                   </h2>
-                  <p className="mt-6 text-xl text-accent-light brightness-150">
+                  <p className="mt-6 text-xl text-white/90">
                     Join thousands of readers who have swapped eye-strain for deep understanding.
                   </p>
                   <ul className="mt-10 space-y-4">
@@ -132,7 +132,7 @@ export default function LandingPage() {
                       "Free for individual students"
                     ].map((item, i) => (
                       <li key={i} className="flex items-center gap-3 font-bold">
-                        <CheckCircle2 size={24} className="text-accent-light brightness-150" />
+                        <CheckCircle2 size={24} className="text-white/70" />
                         {item}
                       </li>
                     ))}
