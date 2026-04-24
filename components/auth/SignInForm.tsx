@@ -10,40 +10,48 @@ import { useRouter } from "next/navigation";
 export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
     try {
-      console.log("Attempting sign in with:", email);
+      console.log("Starting sign-in process for:", email);
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
       });
 
-      console.log("Sign in result:", result);
+      console.log("Sign-in result received:", result);
 
       if (result?.error) {
-        console.error("Sign in error:", result.error);
-        setError("Invalid email or password. Please try again.");
+        setError("Invalid credentials. Please check your email and password.");
         setIsLoading(false);
       } else {
         const searchParams = new URLSearchParams(window.location.search);
         const callbackUrl = searchParams.get("callbackUrl") || "/";
-        console.log("Sign in successful, redirecting to:", callbackUrl);
-        // Use window.location for a hard redirect to ensure the session is fully picked up
-        window.location.href = callbackUrl;
+        
+        console.log("Login successful, preparing redirect to:", callbackUrl);
+        
+        // Force a refresh and then redirect
+        router.refresh();
+        
+        // Use a small timeout to allow session state to propagate
+        setTimeout(() => {
+          window.location.href = callbackUrl;
+        }, 500);
       }
     } catch (err) {
-      console.error("Unexpected sign in error:", err);
+      console.error("Login catch block error:", err);
       setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }
@@ -57,30 +65,30 @@ export default function SignInForm() {
         <div className="hidden w-1/2 flex-col justify-center bg-muted/30 p-12 md:flex border-r border-border">
           <div className="relative w-full h-[350px]">
             <Image 
-                          src="/login.svg" 
-                          alt="Deep Read Login" 
-                          fill 
-                          className="object-contain"
-                          priority 
-                        />
-                      </div>
-                      <div className="mt-12 text-center">
-                        <h2 className="text-3xl font-black text-foreground italic">Your focus, reclaimed.</h2>
-                        <p className="mt-4 text-muted-foreground italic text-base max-w-sm mx-auto">&ldquo;The reading of all good books is like a conversation with the finest minds.&rdquo;</p>
-                      </div>
-                    </div>
+              src="/login.svg" 
+              alt="Deep Read Login" 
+              fill 
+              className="object-contain"
+              priority 
+            />
+          </div>
+          <div className="mt-12 text-center">
+            <h2 className="text-3xl font-black text-foreground italic">Your focus, reclaimed.</h2>
+            <p className="mt-4 text-muted-foreground italic text-base max-w-sm mx-auto">&ldquo;The reading of all good books is like a conversation with the finest minds.&rdquo;</p>
+          </div>
+        </div>
 
-                    {/* Right Form Side */}
-                    <div className="w-full p-10 md:w-1/2 lg:p-20">
-                      <div className="flex flex-col items-center md:items-start">
-                        <Link href="/" className="mb-8 hover:scale-110 transition-transform">
-                           <Image src="/logo.svg" alt="Deep Read" width={140} height={40} />
-                        </Link>
+        {/* Right: Form Side */}
+        <div className="w-full p-10 md:w-1/2 lg:p-20">
+          <div className="flex flex-col items-center md:items-start">
+            <Link href="/" className="mb-8 hover:scale-110 transition-transform">
+               <Image src="/logo.svg" alt="Deep Read" width={140} height={40} />
+            </Link>
             <h1 className="text-4xl font-black text-foreground tracking-tight italic">Welcome Back</h1>
             <p className="mt-3 text-lg text-muted-foreground">Log in to your sanctuary.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-12 space-y-6">
+          <div className="mt-12 space-y-6">
             {error && (
               <div className="rounded-2xl bg-red-500/10 p-4 text-sm font-bold text-red-500 border border-red-500/20">
                 {error}
@@ -92,8 +100,9 @@ export default function SignInForm() {
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
                 <input 
-                  name="email"
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground"
                   required
@@ -109,8 +118,9 @@ export default function SignInForm() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
                 <input 
-                  name="password"
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground"
                   required
@@ -119,7 +129,8 @@ export default function SignInForm() {
             </div>
 
             <button 
-              type="submit"
+              type="button"
+              onClick={handleLogin}
               disabled={isLoading}
               className="group relative w-full overflow-hidden rounded-[20px] bg-accent py-5 font-black text-accent-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70 shadow-2xl shadow-accent/20"
             >
@@ -127,7 +138,7 @@ export default function SignInForm() {
                 {isLoading ? <Loader2 className="animate-spin" /> : <>Open Library <ArrowRight size={20} /></>}
               </span>
             </button>
-          </form>
+          </div>
 
           <p className="mt-12 text-center text-base text-muted-foreground">
             Don&apos;t have an account? <Link href="/auth/signup" className="font-black text-accent hover:underline">Register here</Link>

@@ -6,20 +6,15 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
   
-  console.log(`Middleware: ${pathname} - Token: ${token ? "Yes" : "No"}`);
+  // LOGGING: Only in development or for critical debugging
+  // console.log(`Middleware: ${pathname} - Token: ${token ? "Yes" : "No"}`);
 
-  // Protect library and read routes
+  // Only protect internal routes. 
+  // Do NOT redirect logged-in users away from auth pages to prevent loops.
   if (!token && (pathname.startsWith("/library") || pathname.startsWith("/read"))) {
-    console.log("Middleware: Redirecting to signin");
     const signInUrl = new URL("/auth/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", req.url);
     return NextResponse.redirect(signInUrl);
-  }
-
-  // Redirect logged-in users away from auth pages
-  if (token && pathname.startsWith("/auth")) {
-    console.log("Middleware: Redirecting logged-in user to home");
-    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
@@ -28,5 +23,5 @@ export async function middleware(req: NextRequest) {
 export default middleware;
 
 export const config = { 
-  matcher: ["/library/:path*", "/read/:path*", "/auth/:path*"] 
+  matcher: ["/library/:path*", "/read/:path*"] 
 };

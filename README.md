@@ -1,4 +1,4 @@
-<!-- Deploy Trigger: Updated theme and auth flow consistency -->
+<!-- Deploy Trigger: Final Auth Loop Fix and SEO -->
 # Deep Read
  
 **The Personal Learning Environment for Focused, Persistent Reading.**
