@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Globe, MessageSquare, Share2, Mail } from "lucide-react";
 
 export default function Footer() {
   const { status } = useSession();
@@ -61,13 +61,13 @@ export default function Footer() {
             </p>
             <div className="mt-8 flex gap-5">
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
-                <Twitter size={20} />
+                <Globe size={20} />
               </Link>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
-                <Github size={20} />
+                <Share2 size={20} />
               </Link>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
-                <Linkedin size={20} />
+                <MessageSquare size={20} />
               </Link>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
                 <Mail size={20} />
