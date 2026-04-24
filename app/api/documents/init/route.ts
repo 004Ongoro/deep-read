@@ -3,6 +3,10 @@ import { DocumentModel } from "@/lib/models/Document";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
+interface AuthUser {
+  id: string;
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession();
@@ -14,17 +18,19 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    const user = session.user as AuthUser;
+
     // Check if user already has this document registered
     let doc = await DocumentModel.findOne({ 
       fileHash, 
-      userId: (session.user as any).id 
+      userId: user.id 
     });
 
     if (!doc) {
       doc = await DocumentModel.create({
         title,
         fileHash,
-        userId: (session.user as any).id,
+        userId: user.id,
         currentChapter: 0,
         readingProgress: 0,
       });

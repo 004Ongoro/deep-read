@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { localDb } from "@/lib/db/localDb";
 import { ArrowLeft, Settings, BookOpen, Sun, Moon, Type, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import Link from "next/link";
@@ -9,8 +9,15 @@ import * as pdfjs from "pdfjs-dist";
 // Configure pdfjs worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
+interface IDocument {
+  _id: string;
+  title: string;
+  fileHash: string;
+  currentChapter?: number;
+}
+
 interface ReaderClientProps {
-  document: any;
+  document: IDocument;
 }
 
 export default function ReaderClient({ document }: ReaderClientProps) {
@@ -18,6 +25,46 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   const [extractedPages, setExtractedPages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(document.currentChapter || 1);
   const [isLoading, setIsLoading] = useState(true);
+  const [fontSize, setFontSize] = useState(18);
+  const [theme, setTheme] = useState<"light" | "dark" | "sepia">("light");
+  const [isBionic, setIsBionic] = useState(false);
+  const [isReferenceView, setIsReferenceView] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const extractText = useCallback(async (blob: Blob) => {
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const pages: string[] = [];
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const text = textContent.items.map((item: unknown) => (item as { str: string }).str).join(" ");
+        pages.push(text);
+      }
+
+      setExtractedPages(pages);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error extracting text:", error);
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    async function loadPdf() {
+      const localPdf = await localDb.getPdfByHash(document.fileHash);
+      if (localPdf) {
+        setPdfBlob(localPdf.blob);
+        extractText(localPdf.blob);
+      } else {
+        setIsLoading(false);
+      }
+    }
+    loadPdf();
+  }, [document.fileHash, extractText]);
 
   useEffect(() => {
     if (isLoading || extractedPages.length === 0) return;
@@ -39,58 +86,14 @@ export default function ReaderClient({ document }: ReaderClientProps) {
       }
     };
 
-    const timeoutId = setTimeout(saveProgress, 2000); // Debounce saves
+    const timeoutId = setTimeout(saveProgress, 2000);
     return () => clearTimeout(timeoutId);
   }, [currentPage, extractedPages.length, document._id, isLoading]);
-  const [isFocusMode, setIsFocusMode] = useState(true);
-  const [fontSize, setFontSize] = useState(18);
-  const [theme, setTheme] = useState<"light" | "dark" | "sepia">("light");
-
-  useEffect(() => {
-    async function loadPdf() {
-      const localPdf = await localDb.getPdfByHash(document.fileHash);
-      if (localPdf) {
-        setPdfBlob(localPdf.blob);
-        extractText(localPdf.blob);
-      } else {
-        // Handle missing local PDF (maybe offer to re-upload)
-        setIsLoading(false);
-      }
-    }
-    loadPdf();
-  }, [document.fileHash]);
-
-  async function extractText(blob: Blob) {
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-      const pages: string[] = [];
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const text = textContent.items.map((item: any) => item.str).join(" ");
-        pages.push(text);
-      }
-
-      setExtractedPages(pages);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error extracting text:", error);
-      setIsLoading(false);
-    }
-  }
-
-  const [isBionic, setIsBionic] = useState(false);
-
-  const [isReferenceView, setIsReferenceView] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (pdfBlob) {
       const url = URL.createObjectURL(pdfBlob);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPdfUrl(url);
       return () => URL.revokeObjectURL(url);
     }
@@ -98,14 +101,12 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
   const applyBionic = (text: string) => {
     if (!isBionic) return text;
-    return text.split(' ').map((word, i) => {
+    return text.split(' ').map((word) => {
       if (word.length <= 3) return `<b class="font-bold">${word}</b>`;
       const mid = Math.ceil(word.length / 2);
       return `<b class="font-bold">${word.slice(0, mid)}</b>${word.slice(mid)}`;
     }).join(' ');
   };
-
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const themes = {
     light: "bg-white text-gray-900",
@@ -126,7 +127,6 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${themes[theme]}`}>
-      {/* Top Navigation */}
       <nav className="fixed top-0 z-50 w-full border-b border-gray-100/10 backdrop-blur-md px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/" className="p-2 hover:bg-gray-500/10 rounded-full transition-colors">
@@ -168,7 +168,6 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         </div>
       </nav>
 
-      {/* Reader Content */}
       <main className="mx-auto max-w-5xl px-6 pt-24 pb-32">
         {isReferenceView ? (
           <div className="h-[calc(100vh-160px)] w-full rounded-2xl overflow-hidden border border-gray-100/20 shadow-2xl">
@@ -202,12 +201,11 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         )}
       </main>
 
-      {/* Pagination Bottom Bar */}
       <div className="fixed bottom-0 left-0 w-full border-t border-gray-100/10 backdrop-blur-md p-4">
         <div className="mx-auto max-w-3xl flex items-center justify-between">
           <button 
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
             className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-500/10 disabled:opacity-30 transition-all"
           >
             <ChevronLeft size={20} /> Previous
@@ -219,7 +217,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
           <button 
             disabled={currentPage === extractedPages.length}
-            onClick={() => setCurrentPage(p => Math.min(extractedPages.length, p + 1))}
+            onClick={() => setCurrentPage((p: number) => Math.min(extractedPages.length, p + 1))}
             className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-500/10 disabled:opacity-30 transition-all"
           >
             Next <ChevronRight size={20} />

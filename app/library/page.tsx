@@ -6,6 +6,12 @@ import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 import LibraryClient from "./LibraryClient";
 
+interface AuthUser {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+}
+
 export default async function LibraryPage() {
   const session = await getServerSession();
 
@@ -15,8 +21,10 @@ export default async function LibraryPage() {
 
   await connectToDatabase();
   
+  const user = session.user as AuthUser;
+
   const documents = await DocumentModel.find({ 
-    userId: (session.user as any).id 
+    userId: user.id 
   }).sort({ updatedAt: -1 }).lean();
 
   return (
@@ -24,6 +32,7 @@ export default async function LibraryPage() {
       <Navbar />
       
       <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
+        {/* @ts-expect-error - lean() documents are compatible with client IDocument interface */}
         <LibraryClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
       </main>
 

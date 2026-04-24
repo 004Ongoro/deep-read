@@ -3,6 +3,10 @@ import { DocumentModel } from "@/lib/models/Document";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
+interface AuthUser {
+  id: string;
+}
+
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession();
@@ -19,9 +23,11 @@ export async function DELETE(req: Request) {
 
     await connectToDatabase();
 
+    const user = session.user as AuthUser;
+
     const doc = await DocumentModel.findOneAndDelete({ 
       _id: id, 
-      userId: (session.user as any).id 
+      userId: user.id 
     });
 
     if (!doc) {

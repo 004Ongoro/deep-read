@@ -4,6 +4,12 @@ import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
 import ReaderClient from "./ReaderClient";
 
+interface AuthUser {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+}
+
 export default async function ReadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession();
@@ -14,9 +20,11 @@ export default async function ReadPage({ params }: { params: Promise<{ id: strin
 
   await connectToDatabase();
   
+  const user = session.user as AuthUser;
+  
   const document = await DocumentModel.findOne({ 
     _id: id,
-    userId: (session.user as any).id 
+    userId: user.id 
   }).lean();
 
   if (!document) {

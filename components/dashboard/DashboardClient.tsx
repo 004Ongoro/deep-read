@@ -2,13 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Book, Clock, ArrowRight, FileText, Trash2 } from "lucide-react";
+import { Plus, Book, ArrowRight, FileText, Trash2 } from "lucide-react";
 import { ingestDocument } from "@/lib/utils/pdf-handler";
 import { useSession } from "next-auth/react";
 
-export default function DashboardClient({ initialDocuments }: { initialDocuments: any[] }) {
+interface IDocument {
+  _id: string;
+  title: string;
+  readingProgress: number;
+  updatedAt: string;
+}
+
+interface DashboardClientProps {
+  initialDocuments: IDocument[];
+}
+
+interface AuthUser {
+  id: string;
+}
+
+export default function DashboardClient({ initialDocuments }: DashboardClientProps) {
   const { data: session } = useSession();
-  const [documents, setDocuments] = useState(initialDocuments);
+  const [documents, setDocuments] = useState<IDocument[]>(initialDocuments);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleDelete = async (docId: string) => {
@@ -30,7 +45,8 @@ export default function DashboardClient({ initialDocuments }: { initialDocuments
 
     setIsUploading(true);
     try {
-      const newDoc = await ingestDocument(file, (session.user as any).id);
+      const user = session.user as AuthUser;
+      const newDoc = await ingestDocument(file, user.id);
       setDocuments([newDoc, ...documents]);
     } catch (error) {
       console.error("Upload failed", error);
@@ -109,7 +125,7 @@ export default function DashboardClient({ initialDocuments }: { initialDocuments
           <div className="max-w-md">
             <h2 className="text-3xl font-black tracking-tight">Add New Material</h2>
             <p className="mt-2 text-accent-light brightness-150">
-              Drop a PDF here. We'll strip the noise and prepare your focus environment.
+              Drop a PDF here. We&apos;ll strip the noise and prepare your focus environment.
             </p>
           </div>
           

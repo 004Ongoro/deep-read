@@ -6,6 +6,12 @@ import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
+interface AuthUser {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+}
+
 export default async function Dashboard() {
   const session = await getServerSession();
 
@@ -15,9 +21,11 @@ export default async function Dashboard() {
 
   await connectToDatabase();
   
+  const user = session.user as AuthUser;
+
   // Fetch user's reading list
   const documents = await DocumentModel.find({ 
-    userId: (session.user as any).id 
+    userId: user.id 
   }).sort({ updatedAt: -1 }).lean();
 
   return (
@@ -34,6 +42,7 @@ export default async function Dashboard() {
           </header>
 
           {/* Client-side logic for Upload & Interactions */}
+          {/* @ts-expect-error - lean() documents might have slightly different types than IDocument[] but they are compatible for the client */}
           <DashboardClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
         </div>
       </main>

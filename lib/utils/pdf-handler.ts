@@ -6,6 +6,7 @@ export async function calculateFileHash(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = (e) => {
       const arrayBuffer = e.target?.result as ArrayBuffer;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer as any);
       const hash = CryptoJS.SHA256(wordArray).toString();
       resolve(hash);

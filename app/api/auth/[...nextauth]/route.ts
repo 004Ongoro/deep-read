@@ -5,8 +5,14 @@ import connectToDatabase from "@/lib/db/mongodb";
 import { User } from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 
+interface AuthUser {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+}
+
 const handler = NextAuth({
-  // @ts-ignore
+  // @ts-expect-error - MongoDBAdapter expects a promise that resolves to a Db or MongoClient, but connectToDatabase might return slightly different type depending on mongoose version
   adapter: MongoDBAdapter(connectToDatabase()),
   providers: [
     CredentialsProvider({
@@ -54,7 +60,8 @@ const handler = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
+        const user = session.user as AuthUser;
+        user.id = token.id as string;
       }
       return session;
     }

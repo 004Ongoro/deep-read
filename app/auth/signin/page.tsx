@@ -56,7 +56,7 @@ export default function SignIn() {
           </div>
           <div className="mt-8 text-center">
             <h2 className="text-2xl font-bold text-gray-800">Your focus, reclaimed.</h2>
-            <p className="mt-2 text-gray-500 italic text-sm">"The reading of all good books is like a conversation with the finest minds of past centuries."</p>
+            <p className="mt-2 text-gray-500 italic text-sm">&ldquo;The reading of all good books is like a conversation with the finest minds of past centuries.&rdquo;</p>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export default function SignIn() {
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-500">
-            Don't have an account? <Link href="/auth/signup" className="font-bold text-accent hover:underline">Register here</Link>
+            Don&apos;t have an account? <Link href="/auth/signup" className="font-bold text-accent hover:underline">Register here</Link>
           </p>
         </div>
       </div>

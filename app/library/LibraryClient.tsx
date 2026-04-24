@@ -4,8 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { FileText, ArrowRight, Clock, Search, Trash2 } from "lucide-react";
 
-export default function LibraryClient({ initialDocuments }: { initialDocuments: any[] }) {
-  const [documents, setDocuments] = useState(initialDocuments);
+interface IDocument {
+  _id: string;
+  title: string;
+  readingProgress: number;
+  updatedAt: string;
+}
+
+interface LibraryClientProps {
+  initialDocuments: IDocument[];
+}
+
+export default function LibraryClient({ initialDocuments }: LibraryClientProps) {
+  const [documents, setDocuments] = useState<IDocument[]>(initialDocuments);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleDelete = async (docId: string) => {

@@ -3,6 +3,10 @@ import { DocumentModel } from "@/lib/models/Document";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
+interface AuthUser {
+  id: string;
+}
+
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession();
@@ -14,8 +18,10 @@ export async function PATCH(req: Request) {
 
     await connectToDatabase();
 
+    const user = session.user as AuthUser;
+
     const doc = await DocumentModel.findOneAndUpdate(
-      { _id: documentId, userId: (session.user as any).id },
+      { _id: documentId, userId: user.id },
       { 
         currentChapter, 
         readingProgress, 
