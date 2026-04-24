@@ -35,7 +35,7 @@ export default function SignIn() {
       setError("Invalid email or password. Please try again.");
       setIsLoading(false);
     } else {
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 

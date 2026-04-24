@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
 import connectToDatabase from "@/lib/db/mongodb";
 import { DocumentModel } from "@/lib/models/Document";
 import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 import DashboardClient from "@/components/dashboard/DashboardClient";
+import LandingPage from "@/components/landing/LandingPage";
 
 interface AuthUser {
   id: string;
@@ -12,11 +12,11 @@ interface AuthUser {
   name?: string | null;
 }
 
-export default async function Dashboard() {
+export default async function Home() {
   const session = await getServerSession();
 
   if (!session?.user) {
-    redirect("/auth/signin");
+    return <LandingPage />;
   }
 
   await connectToDatabase();
