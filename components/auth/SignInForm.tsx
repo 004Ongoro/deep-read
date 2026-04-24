@@ -44,25 +44,25 @@ export default function SignInForm() {
         <div className="hidden w-1/2 flex-col justify-center bg-muted/30 p-12 md:flex border-r border-border">
           <div className="relative w-full h-[350px]">
             <Image 
-              src="/login.svg" 
-              alt="Deep Read Login" 
-              fill 
-              className="object-contain dark:opacity-80"
-              priority 
-            />
-          </div>
-          <div className="mt-12 text-center">
-            <h2 className="text-3xl font-black text-foreground italic">Your focus, reclaimed.</h2>
-            <p className="mt-4 text-muted-foreground italic text-base max-w-sm mx-auto">&ldquo;The reading of all good books is like a conversation with the finest minds.&rdquo;</p>
-          </div>
-        </div>
+                          src="/login.svg" 
+                          alt="Deep Read Login" 
+                          fill 
+                          className="object-contain"
+                          priority 
+                        />
+                      </div>
+                      <div className="mt-12 text-center">
+                        <h2 className="text-3xl font-black text-foreground italic">Your focus, reclaimed.</h2>
+                        <p className="mt-4 text-muted-foreground italic text-base max-w-sm mx-auto">&ldquo;The reading of all good books is like a conversation with the finest minds.&rdquo;</p>
+                      </div>
+                    </div>
 
-        {/* Right: Form Side */}
-        <div className="w-full p-10 md:w-1/2 lg:p-20">
-          <div className="flex flex-col items-center md:items-start">
-            <Link href="/" className="mb-8 hover:scale-110 transition-transform">
-               <Image src="/logo.svg" alt="Deep Read" width={140} height={40} className="dark:invert" />
-            </Link>
+                    {/* Right Form Side */}
+                    <div className="w-full p-10 md:w-1/2 lg:p-20">
+                      <div className="flex flex-col items-center md:items-start">
+                        <Link href="/" className="mb-8 hover:scale-110 transition-transform">
+                           <Image src="/logo.svg" alt="Deep Read" width={140} height={40} />
+                        </Link>
             <h1 className="text-4xl font-black text-foreground tracking-tight italic">Welcome Back</h1>
             <p className="mt-3 text-lg text-muted-foreground">Log in to your sanctuary.</p>
           </div>

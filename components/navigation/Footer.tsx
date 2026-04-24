@@ -53,7 +53,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 gap-12 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo.svg" alt="Deep Read" width={140} height={40} className="dark:invert" />
+              <Image src="/logo.svg" alt="Deep Read" width={140} height={40} />
             </Link>
             <p className="mt-6 max-w-xs text-base text-muted-foreground leading-relaxed">
               Transforming static PDFs into focused learning environments. 

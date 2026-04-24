@@ -26,7 +26,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   const [currentPage, setCurrentPage] = useState(document.currentChapter || 1);
   const [isLoading, setIsLoading] = useState(true);
   const [fontSize, setFontSize] = useState(20);
-  const [theme, setTheme] = useState<"light" | "dark" | "sepia">("light");
+  const [theme, setTheme] = useState<"light" | "sepia">("light");
   const [isBionic, setIsBionic] = useState(false);
   const [isReferenceView, setIsReferenceView] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -115,12 +115,6 @@ export default function ReaderClient({ document }: ReaderClientProps) {
       button: "hover:bg-black/5 text-muted-foreground",
       activeButton: "bg-accent text-white"
     },
-    dark: {
-      body: "bg-[#0a0a0a] text-[#f2f2f2]",
-      nav: "bg-[#0a0a0a]/80 border-[#262626]",
-      button: "hover:bg-white/10 text-[#94a3b8]",
-      activeButton: "bg-accent text-white"
-    },
     sepia: {
       body: "bg-[#f4ecd8] text-[#5b4636]",
       nav: "bg-[#f4ecd8]/80 border-[#d3c6a6]",
@@ -140,7 +134,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
     );
   }
 
-  const currentT = themes[theme];
+  const currentT = themes[theme as keyof typeof themes];
 
   return (
     <div className={`min-h-screen transition-all duration-500 ease-in-out ${currentT.body}`}>
@@ -168,10 +162,10 @@ export default function ReaderClient({ document }: ReaderClientProps) {
             <BookOpen size={22} />
           </button>
           <button 
-            onClick={() => setTheme(theme === "light" ? "sepia" : theme === "sepia" ? "dark" : "light")}
+            onClick={() => setTheme(theme === "light" ? "sepia" : "light")}
             className={`p-3 rounded-2xl transition-all ${currentT.button}`}
           >
-            {theme === "light" ? <Sun size={22} /> : theme === "sepia" ? <BookOpen size={22} /> : <Moon size={22} />}
+            {theme === "light" ? <Sun size={22} /> : <BookOpen size={22} />}
           </button>
           <div className="flex items-center gap-1 bg-muted/20 rounded-2xl p-1">
             <button 
@@ -196,7 +190,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
             {pdfUrl && (
               <iframe 
                 src={`${pdfUrl}#page=${currentPage}`} 
-                className={`w-full h-full ${theme === 'dark' ? 'invert hue-rotate-180 brightness-90' : ''}`}
+                className="w-full h-full"
                 title="Source PDF"
               />
             )}
@@ -206,7 +200,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
             className="mx-auto leading-[1.7] font-medium transition-all duration-500" 
             style={{ 
               fontSize: `${fontSize}px`,
-              maxWidth: theme === 'dark' ? '800px' : '750px' 
+              maxWidth: '750px' 
             }}
           >
             {extractedPages[currentPage - 1]?.split('\n').filter(p => p.trim()).map((para, i) => (

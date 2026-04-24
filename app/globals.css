@@ -45,32 +45,6 @@
   --color-muted-foreground: var(--muted-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Low-Fatigue Dark Theme */
-    --background: #0a0a0a;
-    --foreground: #f2f2f2;
-    
-    --primary: #ca4d3d;
-    --primary-foreground: #ffffff;
-    
-    --card: #141414;
-    --card-foreground: #f2f2f2;
-    --popover: #141414;
-    --popover-foreground: #f2f2f2;
-    
-    --accent: #ca4d3d;
-    --accent-foreground: #ffffff;
-    --accent-muted: rgba(202, 77, 61, 0.15);
-    
-    --border: #262626;
-    --input: #262626;
-    --ring: #ca4d3d;
-    --muted: #1a1a1a;
-    --muted-foreground: #94a3b8;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);

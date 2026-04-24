@@ -71,7 +71,7 @@ export default function LandingPage() {
                       alt="Deep Read Interface" 
                       width={800} 
                       height={500}
-                      className="object-cover dark:opacity-80"
+                      className="object-cover"
                     />
                   </div>
                 </div>

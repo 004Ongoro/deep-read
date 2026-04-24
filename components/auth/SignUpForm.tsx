@@ -46,7 +46,7 @@ export default function SignUpForm() {
         {/* Left Side Illustration */}
         <div className="hidden w-1/2 flex-col justify-center bg-muted/30 p-12 md:flex border-r border-border">
            <div className="relative w-full h-[350px]">
-             <Image src="/login.svg" alt="Reading" fill className="object-contain dark:opacity-80" />
+             <Image src="/login.svg" alt="Reading" fill className="object-contain" />
            </div>
            <div className="mt-12 text-center">
             <h2 className="text-3xl font-black text-foreground italic">Start your journey.</h2>
@@ -58,7 +58,7 @@ export default function SignUpForm() {
         <div className="w-full p-10 md:w-1/2 lg:p-20">
           <div className="flex flex-col items-center md:items-start">
             <Link href="/" className="mb-8 hover:scale-110 transition-transform">
-               <Image src="/logo.svg" alt="Deep Read" width={140} height={40} className="dark:invert" />
+               <Image src="/logo.svg" alt="Deep Read" width={140} height={40} />
             </Link>
             <h1 className="text-4xl font-black text-foreground tracking-tight italic">Create Account</h1>
             <p className="mt-3 text-lg text-muted-foreground">Join the community of deep readers.</p>
