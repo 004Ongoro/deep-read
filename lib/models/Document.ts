@@ -9,6 +9,7 @@ export interface IDocument extends Document {
   currentChapter: number;
   lastReadAnchor: string; // The ID of the last read paragraph
   readingProgress: number; // Percentage 0-100
+  summary?: string; // AI generated summary
   extractedText?: {
     chapterIndex: number;
     title: string;
@@ -26,6 +27,7 @@ const DocumentSchema: Schema = new Schema({
   currentChapter: { type: Number, default: 0 },
   lastReadAnchor: { type: String },
   readingProgress: { type: Number, default: 0 },
+  summary: { type: String },
   extractedText: [{
     chapterIndex: Number,
     title: String,
