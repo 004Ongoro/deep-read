@@ -15,7 +15,13 @@ interface IDocument {
   _id: string;
   title: string;
   fileHash: string;
+  sourceType: 'pdf' | 'url';
   currentChapter?: number;
+  extractedText?: {
+    chapterIndex: number;
+    title: string;
+    content: string;
+  }[];
 }
 
 interface ReaderClientProps {
@@ -73,7 +79,24 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   }, []);
 
   useEffect(() => {
-    async function loadPdf() {
+    async function loadContent() {
+      if (document.sourceType === 'url') {
+        if (document.extractedText && document.extractedText.length > 0) {
+          const pages = document.extractedText.map(t => t.content);
+          setExtractedPages(pages);
+          const cleaned: Record<number, string> = {};
+          pages.forEach((p, i) => {
+            cleaned[i] = p;
+          });
+          setCleanedPages(cleaned);
+          setIsLoading(false);
+        } else {
+          console.error("URL document missing content");
+          setIsLoading(false);
+        }
+        return;
+      }
+
       const localPdf = await localDb.getPdfByHash(document.fileHash);
       if (localPdf) {
         setPdfBlob(localPdf.blob);
@@ -82,11 +105,11 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         setIsLoading(false);
       }
     }
-    loadPdf();
-  }, [document.fileHash, extractText]);
+    loadContent();
+  }, [document.fileHash, document.sourceType, document.extractedText, extractText]);
 
   useEffect(() => {
-    if (isLoading || extractedPages.length === 0) return;
+    if (isLoading || extractedPages.length === 0 || document.sourceType === 'url') return;
 
     const saveProgress = async () => {
       const progress = Math.round((currentPage / extractedPages.length) * 100);
@@ -107,11 +130,11 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
     const timeoutId = setTimeout(saveProgress, 2000);
     return () => clearTimeout(timeoutId);
-  }, [currentPage, extractedPages.length, document._id, isLoading]);
+  }, [currentPage, extractedPages.length, document._id, isLoading, document.sourceType]);
 
   useEffect(() => {
     const cleanCurrentPage = async () => {
-      if (extractedPages.length === 0) return;
+      if (extractedPages.length === 0 || document.sourceType === 'url') return;
       const pageIndex = currentPage - 1;
       
       // 1. Check in-memory state first
@@ -165,12 +188,12 @@ export default function ReaderClient({ document }: ReaderClientProps) {
     };
 
     cleanCurrentPage();
-  }, [currentPage, extractedPages, cleanedPages, document.fileHash]);
+  }, [currentPage, extractedPages, cleanedPages, document.fileHash, document.sourceType]);
 
   // Proactive background cleaning for the next page
   useEffect(() => {
     const preFetchNextPage = async () => {
-      if (extractedPages.length === 0 || currentPage >= extractedPages.length) return;
+      if (extractedPages.length === 0 || currentPage >= extractedPages.length || document.sourceType === 'url') return;
       const nextPageIndex = currentPage; // currentPage is 1-based, so its value is the next index (0-based)
 
       // Check if already in memory or in DB
@@ -210,7 +233,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
     const timeoutId = setTimeout(preFetchNextPage, 1000); // Wait 1s after page load to pre-fetch
     return () => clearTimeout(timeoutId);
-  }, [currentPage, extractedPages, cleanedPages, isCleaning, document.fileHash]);
+  }, [currentPage, extractedPages, cleanedPages, isCleaning, document.fileHash, document.sourceType]);
 
   useEffect(() => {
     if (pdfBlob) {
@@ -269,13 +292,15 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setIsReferenceView(!isReferenceView)}
-            className={`p-3 rounded-2xl transition-all ${isReferenceView ? currentT.activeButton : currentT.button}`}
-            title="Reference View (Source PDF)"
-          >
-            <FileText size={22} />
-          </button>
+          {document.sourceType === 'pdf' && (
+            <button 
+              onClick={() => setIsReferenceView(!isReferenceView)}
+              className={`p-3 rounded-2xl transition-all ${isReferenceView ? currentT.activeButton : currentT.button}`}
+              title="Reference View (Source PDF)"
+            >
+              <FileText size={22} />
+            </button>
+          )}
           <button 
             onClick={() => setIsBionic(!isBionic)}
             className={`p-3 rounded-2xl transition-all ${isBionic ? currentT.activeButton : currentT.button}`}

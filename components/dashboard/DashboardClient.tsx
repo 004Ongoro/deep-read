@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Book, ArrowRight, FileText, Trash2 } from "lucide-react";
+import { Plus, Book, ArrowRight, FileText, Trash2, Globe } from "lucide-react";
 import { ingestDocument } from "@/lib/utils/pdf-handler";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/ui/Modal";
@@ -12,6 +12,7 @@ interface IDocument {
   title: string;
   readingProgress: number;
   updatedAt: string;
+  sourceType: 'pdf' | 'url';
 }
 
 interface DashboardClientProps {
@@ -26,6 +27,8 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
   const { data: session } = useSession();
   const [documents, setDocuments] = useState<IDocument[]>(initialDocuments);
   const [isUploading, setIsUploading] = useState(false);
+  const [url, setUrl] = useState("");
+  const [isUrlLoading, setIsUrlLoading] = useState(false);
   
   // Modal state
   const [modalConfig, setModalConfig] = useState({
@@ -88,6 +91,34 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
     }
   };
 
+  const handleUrlSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url || !session?.user) return;
+
+    setIsUrlLoading(true);
+    try {
+      const response = await fetch("/api/documents/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (response.ok) {
+        const newDoc = await response.json();
+        setDocuments([newDoc, ...documents]);
+        setUrl("");
+      } else {
+        const data = await response.json();
+        showAlert("URL Failed", data.message || "Failed to process webpage.");
+      }
+    } catch (error) {
+      console.error("URL processing failed", error);
+      showAlert("URL Failed", "Failed to process webpage. Check the URL and try again.");
+    } finally {
+      setIsUrlLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-12 transition-theme">
       {/* Active Reading Grid */}
@@ -104,7 +135,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
               <div key={doc._id} className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1">
                 <div className="mb-6 flex items-start justify-between">
                   <div className="rounded-2xl bg-accent-muted p-4 text-accent">
-                    <FileText size={24} />
+                    {doc.sourceType === 'url' ? <Globe size={24} /> : <FileText size={24} />}
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <button 
@@ -161,30 +192,55 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
           <div className="max-w-md text-center md:text-left">
             <h2 className="text-4xl font-black tracking-tight">Add New Material</h2>
             <p className="mt-4 text-lg text-accent-foreground/90 leading-relaxed">
-              Drop a PDF here. We&apos;ll strip the noise, handle the reflow, and prepare your perfect focus environment.
+              Drop a PDF or paste a URL. We&apos;ll strip the noise, handle the reflow, and prepare your perfect focus environment.
             </p>
           </div>
           
-          <label className="flex cursor-pointer items-center gap-4 rounded-[28px] bg-white px-12 py-6 text-xl font-black text-accent transition-all hover:scale-105 hover:shadow-2xl active:scale-95 shadow-xl">
-            {isUploading ? (
-              <span className="flex items-center gap-3 italic">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-                Processing...
-              </span>
-            ) : (
-              <>
-                <Plus size={24} strokeWidth={3} />
-                <span>Upload PDF</span>
-              </>
-            )}
-            <input 
-              type="file" 
-              accept=".pdf" 
-              className="hidden" 
-              onChange={handleFileUpload} 
-              disabled={isUploading}
-            />
-          </label>
+          <div className="flex flex-col gap-4 w-full md:w-auto">
+            <label className="flex cursor-pointer items-center justify-center gap-4 rounded-[28px] bg-white px-12 py-6 text-xl font-black text-accent transition-all hover:scale-105 hover:shadow-2xl active:scale-95 shadow-xl">
+              {isUploading ? (
+                <span className="flex items-center gap-3 italic">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                  Processing PDF...
+                </span>
+              ) : (
+                <>
+                  <Plus size={24} strokeWidth={3} />
+                  <span>Upload PDF</span>
+                </>
+              )}
+              <input 
+                type="file" 
+                accept=".pdf" 
+                className="hidden" 
+                onChange={handleFileUpload} 
+                disabled={isUploading || isUrlLoading}
+              />
+            </label>
+
+            <form onSubmit={handleUrlSubmit} className="relative">
+              <input 
+                type="url"
+                placeholder="Paste webpage URL..."
+                required
+                className="w-full rounded-[28px] bg-white/10 border-2 border-white/20 px-8 py-6 text-lg font-bold text-white placeholder:text-white/50 focus:outline-none focus:border-white/40 transition-all pr-32"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={isUploading || isUrlLoading}
+              />
+              <button 
+                type="submit"
+                disabled={isUploading || isUrlLoading || !url}
+                className="absolute right-3 top-3 bottom-3 px-6 rounded-[20px] bg-white text-accent font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+              >
+                {isUrlLoading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                ) : (
+                  "Add URL"
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 

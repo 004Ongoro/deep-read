@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         title,
         fileHash,
         userId: user.id,
+        sourceType: 'pdf',
         currentChapter: 0,
         readingProgress: 0,
       });

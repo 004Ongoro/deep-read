@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, ArrowRight, Clock, Search, Trash2 } from "lucide-react";
+import { FileText, ArrowRight, Clock, Search, Trash2, Globe } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 
 interface IDocument {
@@ -10,6 +10,7 @@ interface IDocument {
   title: string;
   readingProgress: number;
   updatedAt: string;
+  sourceType: 'pdf' | 'url';
 }
 
 interface LibraryClientProps {
@@ -75,7 +76,7 @@ export default function LibraryClient({ initialDocuments }: LibraryClientProps) 
             <div key={doc._id} className="group flex flex-col md:flex-row items-center justify-between rounded-[32px] border border-border bg-card p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-accent/5 hover:border-accent/20">
               <div className="flex items-center gap-8 w-full md:w-auto">
                 <div className="rounded-2xl bg-accent-muted p-5 text-accent group-hover:scale-110 transition-transform">
-                  <FileText size={28} />
+                  {doc.sourceType === 'url' ? <Globe size={28} /> : <FileText size={28} />}
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground group-hover:text-accent transition-colors text-xl line-clamp-1">

@@ -4,6 +4,7 @@ export interface IDocument extends Document {
   userId: mongoose.Types.ObjectId;
   title: string;
   fileHash: string; // To match with local IndexedDB file
+  sourceType: 'pdf' | 'url';
   totalChapters: number;
   currentChapter: number;
   lastReadAnchor: string; // The ID of the last read paragraph
@@ -20,6 +21,7 @@ const DocumentSchema: Schema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
   fileHash: { type: String, required: true }, // Unique identifier for the PDF
+  sourceType: { type: String, enum: ['pdf', 'url'], default: 'pdf' },
   totalChapters: { type: Number, default: 0 },
   currentChapter: { type: Number, default: 0 },
   lastReadAnchor: { type: String },
