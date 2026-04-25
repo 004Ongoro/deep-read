@@ -97,8 +97,8 @@ export default function LandingPage() {
           <div className="mx-auto max-w-4xl px-4 text-center">
             <h2 className="text-sm font-bold uppercase tracking-widest text-accent mb-6">The Modern Struggle</h2>
             <p className="text-3xl font-bold leading-tight sm:text-4xl text-foreground italic">
-              "PDFs weren't designed for reading; they were designed for printing. 
-              On modern screens, they are static, rigid, and exhausting."
+              &quot;PDFs weren&apos;t designed for reading; they were designed for printing. 
+              On modern screens, they are static, rigid, and exhausting.&quot;
             </p>
             <p className="mt-8 text-lg text-muted-foreground">
               Deep Read breaks the cage of the fixed-layout document, giving you the flexibility of an e-reader 

@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { localDb } from "@/lib/db/localDb";
-import { ArrowLeft, Settings, BookOpen, Sun, Moon, Type, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ArrowLeft, Settings, BookOpen, Sun, Moon, Type, ChevronLeft, ChevronRight, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import * as pdfjs from "pdfjs-dist";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // Configure pdfjs worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -23,6 +25,8 @@ interface ReaderClientProps {
 export default function ReaderClient({ document }: ReaderClientProps) {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [extractedPages, setExtractedPages] = useState<string[]>([]);
+  const [cleanedPages, setCleanedPages] = useState<Record<number, string>>({});
+  const [isCleaning, setIsCleaning] = useState(false);
   const [currentPage, setCurrentPage] = useState(document.currentChapter || 1);
   const [isLoading, setIsLoading] = useState(true);
   const [fontSize, setFontSize] = useState(20);
@@ -89,6 +93,50 @@ export default function ReaderClient({ document }: ReaderClientProps) {
     const timeoutId = setTimeout(saveProgress, 2000);
     return () => clearTimeout(timeoutId);
   }, [currentPage, extractedPages.length, document._id, isLoading]);
+
+  useEffect(() => {
+    const cleanCurrentPage = async () => {
+      if (extractedPages.length === 0) return;
+      const pageIndex = currentPage - 1;
+      
+      // If we already cleaned this page, do nothing
+      if (cleanedPages[pageIndex]) return;
+
+      setIsCleaning(true);
+      try {
+        const response = await fetch("/api/documents/clean", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: extractedPages[pageIndex] }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCleanedPages(prev => ({
+            ...prev,
+            [pageIndex]: data.markdown
+          }));
+        } else {
+          console.error("Failed to clean page text");
+          // Fallback to raw text if cleaning fails
+          setCleanedPages(prev => ({
+            ...prev,
+            [pageIndex]: extractedPages[pageIndex]
+          }));
+        }
+      } catch (error) {
+        console.error("Error calling clean API:", error);
+        setCleanedPages(prev => ({
+          ...prev,
+          [pageIndex]: extractedPages[pageIndex]
+        }));
+      } finally {
+        setIsCleaning(false);
+      }
+    };
+
+    cleanCurrentPage();
+  }, [currentPage, extractedPages, cleanedPages]);
 
   useEffect(() => {
     if (pdfBlob) {
@@ -203,19 +251,44 @@ export default function ReaderClient({ document }: ReaderClientProps) {
               maxWidth: '750px' 
             }}
           >
-            {extractedPages[currentPage - 1]?.split('\n').filter(p => p.trim()).map((para, i) => (
-              <p 
-                key={i} 
-                onMouseEnter={() => setHoveredIndex(i)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                className={`mb-10 transition-all duration-500 ease-out cursor-default ${
-                  hoveredIndex !== null && hoveredIndex !== i 
-                    ? 'opacity-20 blur-[1px] scale-[0.98]' 
-                    : 'opacity-100 scale-100'
-                }`}
-                dangerouslySetInnerHTML={{ __html: applyBionic(para) }}
-              />
-            ))}
+            {isCleaning ? (
+              <div className="flex flex-col items-center justify-center py-32 text-muted-foreground opacity-70">
+                <Loader2 className="h-12 w-12 animate-spin mb-4 text-accent" />
+                <p className="text-sm font-black tracking-[0.2em] uppercase">Gemini AI is cleaning text...</p>
+              </div>
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({node, children, ...props}) => {
+                    const content = isBionic ? (
+                      Array.isArray(children) 
+                        ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
+                        : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
+                    ) : children;
+                    
+                    return <p className="mb-10 transition-all duration-500 hover:opacity-100 opacity-90 cursor-default" {...props}>{content}</p>
+                  },
+                  h1: ({node, ...props}) => <h1 className="text-4xl font-black mt-16 mb-8 tracking-tight" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-3xl font-bold mt-14 mb-6 tracking-tight" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-2xl font-bold mt-10 mb-4" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-10 space-y-3" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-10 space-y-3" {...props} />,
+                  li: ({node, children, ...props}) => {
+                    const content = isBionic ? (
+                      Array.isArray(children) 
+                        ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
+                        : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
+                    ) : children;
+                    return <li className="pl-2" {...props}>{content}</li>
+                  },
+                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-accent pl-6 py-2 mb-10 italic opacity-80" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-black text-accent" {...props} />
+                }}
+              >
+                {cleanedPages[currentPage - 1] || ""}
+              </ReactMarkdown>
+            )}
           </div>
         )}
       </main>
