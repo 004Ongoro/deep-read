@@ -8,14 +8,22 @@ export interface LocalPdf {
   addedAt: Date;
 }
 
+export interface CleanedPage {
+  id?: number;
+  fileHash: string;
+  pageIndex: number;
+  content: string;
+}
 
 export class DeepReadLocalDB extends Dexie {
   pdfs!: Table<LocalPdf>;
+  cleanedPages!: Table<CleanedPage>;
 
   constructor() {
     super('DeepReadLocalDB');
-    this.version(1).stores({
-      pdfs: '++id, fileHash, fileName' 
+    this.version(2).stores({
+      pdfs: '++id, fileHash, fileName',
+      cleanedPages: '++id, fileHash, pageIndex, [fileHash+pageIndex]'
     });
   }
 
@@ -34,6 +42,22 @@ export class DeepReadLocalDB extends Dexie {
 
   async getPdfByHash(fileHash: string) {
     return await this.pdfs.where('fileHash').equals(fileHash).first();
+  }
+
+  async saveCleanedPage(fileHash: string, pageIndex: number, content: string) {
+    const exists = await this.cleanedPages.where({ fileHash, pageIndex }).first();
+    if (!exists) {
+      return await this.cleanedPages.add({
+        fileHash,
+        pageIndex,
+        content
+      });
+    }
+    return exists.id;
+  }
+
+  async getCleanedPage(fileHash: string, pageIndex: number) {
+    return await this.cleanedPages.where({ fileHash, pageIndex }).first();
   }
 }
 

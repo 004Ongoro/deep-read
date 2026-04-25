@@ -114,8 +114,18 @@ export default function ReaderClient({ document }: ReaderClientProps) {
       if (extractedPages.length === 0) return;
       const pageIndex = currentPage - 1;
       
-      // If we already cleaned this page, do nothing
-      if (cleanedPages[pageIndex]) return;
+      // 1. Check in-memory state first
+      if (cleanedPages[pageIndex] !== undefined) return;
+
+      // 2. Check localDb
+      const cached = await localDb.getCleanedPage(document.fileHash, pageIndex);
+      if (cached) {
+        setCleanedPages(prev => ({
+          ...prev,
+          [pageIndex]: cached.content
+        }));
+        return;
+      }
 
       setIsCleaning(true);
       try {
@@ -127,13 +137,17 @@ export default function ReaderClient({ document }: ReaderClientProps) {
 
         if (response.ok) {
           const data = await response.json();
+          const cleanedText = data.markdown;
+          
           setCleanedPages(prev => ({
             ...prev,
-            [pageIndex]: data.markdown
+            [pageIndex]: cleanedText
           }));
+
+          // Save to localDb for future sessions
+          await localDb.saveCleanedPage(document.fileHash, pageIndex, cleanedText);
         } else {
           console.error("Failed to clean page text");
-          // Fallback to raw text if cleaning fails
           setCleanedPages(prev => ({
             ...prev,
             [pageIndex]: extractedPages[pageIndex]
@@ -151,7 +165,52 @@ export default function ReaderClient({ document }: ReaderClientProps) {
     };
 
     cleanCurrentPage();
-  }, [currentPage, extractedPages, cleanedPages]);
+  }, [currentPage, extractedPages, cleanedPages, document.fileHash]);
+
+  // Proactive background cleaning for the next page
+  useEffect(() => {
+    const preFetchNextPage = async () => {
+      if (extractedPages.length === 0 || currentPage >= extractedPages.length) return;
+      const nextPageIndex = currentPage; // currentPage is 1-based, so its value is the next index (0-based)
+
+      // Check if already in memory or in DB
+      if (cleanedPages[nextPageIndex] !== undefined) return;
+      const cached = await localDb.getCleanedPage(document.fileHash, nextPageIndex);
+      if (cached) {
+        setCleanedPages(prev => ({
+          ...prev,
+          [nextPageIndex]: cached.content
+        }));
+        return;
+      }
+
+      // Proactively clean next page if not busy
+      if (!isCleaning) {
+        try {
+          const response = await fetch("/api/documents/clean", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: extractedPages[nextPageIndex] }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const cleanedText = data.markdown;
+            setCleanedPages(prev => ({
+              ...prev,
+              [nextPageIndex]: cleanedText
+            }));
+            await localDb.saveCleanedPage(document.fileHash, nextPageIndex, cleanedText);
+          }
+        } catch (e) {
+          console.warn("Pre-fetch cleaning failed", e);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(preFetchNextPage, 1000); // Wait 1s after page load to pre-fetch
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, extractedPages, cleanedPages, isCleaning, document.fileHash]);
 
   useEffect(() => {
     if (pdfBlob) {
@@ -272,37 +331,53 @@ export default function ReaderClient({ document }: ReaderClientProps) {
                 <p className="text-sm font-black tracking-[0.2em] uppercase">Gemini AI is cleaning text...</p>
               </div>
             ) : (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({node, children, ...props}) => {
-                    const content = isBionic ? (
-                      Array.isArray(children) 
-                        ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
-                        : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
-                    ) : children;
-                    
-                    return <p className="mb-10 transition-all duration-500 hover:opacity-100 opacity-90 cursor-default" {...props}>{content}</p>
-                  },
-                  h1: ({node, ...props}) => <h1 className="text-4xl font-black mt-16 mb-8 tracking-tight" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="text-3xl font-bold mt-14 mb-6 tracking-tight" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-2xl font-bold mt-10 mb-4" {...props} />,
-                  ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-10 space-y-3" {...props} />,
-                  ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-10 space-y-3" {...props} />,
-                  li: ({node, children, ...props}) => {
-                    const content = isBionic ? (
-                      Array.isArray(children) 
-                        ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
-                        : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
-                    ) : children;
-                    return <li className="pl-2" {...props}>{content}</li>
-                  },
-                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-accent pl-6 py-2 mb-10 italic opacity-80" {...props} />,
-                  strong: ({node, ...props}) => <strong className="font-black text-accent" {...props} />
-                }}
-              >
-                {cleanedPages[currentPage - 1] || ""}
-              </ReactMarkdown>
+              cleanedPages[currentPage - 1] === "" ? (
+                <div className="flex flex-col items-center justify-center py-32 text-muted-foreground opacity-50">
+                  <FileText className="h-12 w-12 mb-4" />
+                  <p className="text-sm font-black tracking-[0.2em] uppercase text-center">
+                    Front matter skipped.<br/>
+                    <span className="text-[10px] opacity-70">Gemini identified this as TOC, Preface, or Metadata.</span>
+                  </p>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(extractedPages.length, prev + 1))}
+                    className="mt-6 px-6 py-2 border border-border rounded-xl text-xs font-black uppercase tracking-widest hover:bg-accent hover:text-white transition-all"
+                  >
+                    Go to Next Page
+                  </button>
+                </div>
+              ) : (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({node, children, ...props}) => {
+                      const content = isBionic ? (
+                        Array.isArray(children) 
+                          ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
+                          : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
+                      ) : children;
+                      
+                      return <p className="mb-10 transition-all duration-500 hover:opacity-100 opacity-90 cursor-default" {...props}>{content}</p>
+                    },
+                    h1: ({node, ...props}) => <h1 className="text-4xl font-black mt-16 mb-8 tracking-tight" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-3xl font-bold mt-14 mb-6 tracking-tight" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-2xl font-bold mt-10 mb-4" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-8 mb-10 space-y-3" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-8 mb-10 space-y-3" {...props} />,
+                    li: ({node, children, ...props}) => {
+                      const content = isBionic ? (
+                        Array.isArray(children) 
+                          ? children.map((c, i) => typeof c === 'string' ? <span key={i} dangerouslySetInnerHTML={{ __html: applyBionic(c) }} /> : c)
+                          : (typeof children === 'string' ? <span dangerouslySetInnerHTML={{ __html: applyBionic(children) }} /> : children)
+                      ) : children;
+                      return <li className="pl-2" {...props}>{content}</li>
+                    },
+                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-accent pl-6 py-2 mb-10 italic opacity-80" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-black text-accent" {...props} />
+                  }}
+                >
+                  {cleanedPages[currentPage - 1] || ""}
+                </ReactMarkdown>
+              )
             )}
           </div>
         )}

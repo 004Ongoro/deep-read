@@ -26,12 +26,13 @@ Here is the raw text extracted from a single page of a PDF document:
 ${text}
 """
 
-Please clean this text. 
-1. Remove all headers, footers, page numbers, and irrelevant document metadata.
-2. Fix any weird line breaks or hyphenated words caused by PDF extraction.
-3. Structure it into clean, readable Markdown (using headings, lists, or bold text where appropriate).
-4. Do NOT summarize or hallucinate new information. Keep the original meaning and core text intact.
-5. Output ONLY the raw Markdown text. Do not wrap it in \`\`\`markdown code blocks. Just the markdown text.`;
+Please clean this text according to these rules:
+1. REMOVE all non-narrative elements: headers, footers, page numbers, and irrelevant document metadata.
+2. REMOVE front matter if present: If this page contains a Table of Contents, Preface, Introduction, Foreword, Dedication, Copyright page, or Glossary, return an empty string or a very brief indicator that it was removed. We want the text to start directly with the main content/chapters.
+3. FIX formatting: Fix any weird line breaks, merge hyphenated words that were split across lines, and repair broken sentences caused by PDF extraction.
+4. STRUCTURE: Use clean, readable Markdown. Use proper heading levels (e.g., # for Chapters, ## for sections), bullet points for lists, and italics/bold for emphasis if it was present in the original.
+5. NO SUMMARY: Do NOT summarize, omit main narrative text, or hallucinate new information. Keep the original wording and meaning of the main content intact.
+6. OUTPUT ONLY the raw Markdown text. Do not wrap it in \`\`\`markdown code blocks. Just the markdown text. If the entire page is "useless" (like a TOC or blank page), just return an empty string.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
