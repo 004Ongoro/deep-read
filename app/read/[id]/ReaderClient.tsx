@@ -5,7 +5,7 @@ import { localDb } from "@/lib/db/localDb";
 import { 
   ArrowLeft, BookOpen, Sun, Moon, Type, ChevronLeft, ChevronRight, 
   FileText, Loader2, Sparkles, MessageSquare, Highlighter, StickyNote,
-  X, Send, Trash2, List
+  X, Send, Trash2
 } from "lucide-react";
 import Link from "next/link";
 import * as pdfjs from "pdfjs-dist";
@@ -86,6 +86,15 @@ export default function ReaderClient({ document }: ReaderClientProps) {
     }
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("deep-read-settings", JSON.stringify({
+      fontSize,
+      theme,
+      bionicReading: isBionic,
+      defaultReferenceView: isReferenceView
+    }));
+  }, [fontSize, theme, isBionic, isReferenceView]);
+
   const fetchAnnotations = useCallback(async () => {
     try {
       const res = await fetch(`/api/annotations?documentId=${document._id}`);
@@ -108,6 +117,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const text = textContent.items
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .map((item: any) => ("str" in item ? (item as { str: string }).str : ""))
           .join(" ");
         pages.push(text);
@@ -426,30 +436,49 @@ export default function ReaderClient({ document }: ReaderClientProps) {
               <StickyNote size={22} />
             </button>
             <div className="w-[1px] h-6 bg-border mx-2" />
+            
+            {/* Restored Personalization */}
+            <div className="flex items-center gap-1 bg-muted/20 rounded-2xl p-1">
+              <button 
+                onClick={() => setFontSize(prev => Math.max(prev - 2, 12))}
+                className={`p-2 rounded-xl transition-all ${currentT.button}`}
+              >
+                <Type size={16} />
+              </button>
+              <button 
+                onClick={() => setFontSize(prev => Math.min(prev + 2, 40))}
+                className={`p-2 rounded-xl transition-all ${currentT.button}`}
+              >
+                <Type size={24} />
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setIsBionic(!isBionic)}
+              className={`p-3 rounded-2xl transition-all ${isBionic ? currentT.activeButton : currentT.button}`}
+              title="Bionic Reading"
+            >
+              <BookOpen size={22} />
+            </button>
             <button 
               onClick={() => setTheme(theme === "light" ? "sepia" : "light")}
               className={`p-3 rounded-2xl transition-all ${currentT.button}`}
             >
               {theme === "light" ? <Sun size={22} /> : <Moon size={22} />}
             </button>
-            <button 
-              onClick={() => setActiveTab(activeTab === 'ai' ? null : 'ai')}
-              className={`lg:hidden p-3 rounded-2xl transition-all ${currentT.button}`}
-            >
-              <List size={22} />
-            </button>
           </div>
         </nav>
 
         <main 
           ref={mainRef}
-          onMouseUp={handleMouseUp}
           className="mx-auto w-full max-w-4xl px-8 pt-32 pb-40 relative"
         >
-          <div 
-            className="mx-auto leading-[1.8] font-medium transition-all duration-500" 
-            style={{ fontSize: `${fontSize}px`, maxWidth: '750px' }}
-          >
+          {/* Wrapper for selection to avoid re-rendering entire markdown on mouseUp */}
+          <div onMouseUp={handleMouseUp} className="relative">
+            <div 
+              className="mx-auto leading-[1.8] font-medium transition-all duration-500" 
+              style={{ fontSize: `${fontSize}px`, maxWidth: '750px' }}
+            >
             {isCleaning ? (
               <div className="flex flex-col items-center justify-center py-32 text-muted-foreground opacity-70">
                 <Loader2 className="h-12 w-12 animate-spin mb-4 text-accent" />
@@ -487,6 +516,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
                 {pageContent}
               </ReactMarkdown>
             )}
+            </div>
           </div>
         </main>
 

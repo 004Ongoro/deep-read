@@ -46,8 +46,8 @@ export async function POST(req: Request) {
     ${fullText}`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      model: "gemini-2.5-flash",
+      contents: prompt,
     });
     
     const summary = response.text || "";
