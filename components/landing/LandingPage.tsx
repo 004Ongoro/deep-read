@@ -299,7 +299,7 @@ export default function LandingPage() {
                     Start Reading Now
                   </Link>
                   <p className="mt-8 text-lg font-bold italic opacity-80 flex items-center gap-2">
-                    <MessageCircle size={24} /> "The best tool for my PhD research."
+                    <MessageCircle size={24} /> &quot;The best tool for my PhD research.&quot;
                   </p>
                 </div>
               </div>
@@ -311,4 +311,5 @@ export default function LandingPage() {
       <Footer />
     </div>
   );
+} );
 }
