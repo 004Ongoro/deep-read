@@ -3,16 +3,24 @@
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function SignInForm() {
+  const { isAuthenticated, isLoading: sessionLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,28 +43,31 @@ export default function SignInForm() {
 
       if (result?.error) {
         setError("Invalid credentials. Please check your email and password.");
-        setIsLoading(false);
       } else {
         const searchParams = new URLSearchParams(window.location.search);
         const callbackUrl = searchParams.get("callbackUrl") || "/";
         
         console.log("Login successful, preparing redirect to:", callbackUrl);
         
-        // Force a refresh and then redirect
-        router.refresh();
-        
-        // Use a small timeout to allow session state to propagate
-        setTimeout(() => {
-          window.location.href = callbackUrl;
-        }, 500);
+        // Use window.location.href for full session refresh to ensure all routes see the new session
+        window.location.href = callbackUrl;
+        return; 
       }
     } catch (err) {
       console.error("Login catch block error:", err);
       setError("An unexpected error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
 
+  if (sessionLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-64px)] items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-accent" />
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-[calc(100vh-64px)] items-center justify-center p-4 bg-background transition-theme">
       <div className="flex w-full max-w-5xl overflow-hidden rounded-[40px] bg-card shadow-2xl shadow-accent/10 border border-border">

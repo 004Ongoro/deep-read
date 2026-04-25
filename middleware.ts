@@ -5,12 +5,15 @@ import type { NextRequest } from "next/server";
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
-  
-  // LOGGING: Only in development or for critical debugging
-  // console.log(`Middleware: ${pathname} - Token: ${token ? "Yes" : "No"}`);
+  const isAuthPage = pathname.startsWith("/auth");
 
-  // Only protect internal routes. 
-  // Do NOT redirect logged-in users away from auth pages to prevent loops.
+  if (isAuthPage) {
+    if (token) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    return NextResponse.next();
+  }
+
   if (!token && (pathname.startsWith("/library") || pathname.startsWith("/read"))) {
     const signInUrl = new URL("/auth/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", req.url);
@@ -23,5 +26,5 @@ export async function middleware(req: NextRequest) {
 export default middleware;
 
 export const config = { 
-  matcher: ["/library/:path*", "/read/:path*"] 
+  matcher: ["/library/:path*", "/read/:path*", "/auth/:path*"] 
 };
