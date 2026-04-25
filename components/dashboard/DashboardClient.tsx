@@ -108,8 +108,16 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
         setDocuments([newDoc, ...documents]);
         setUrl("");
       } else {
-        const data = await response.json();
-        showAlert("URL Failed", data.message || "Failed to process webpage.");
+        let errorMessage = "Failed to process webpage.";
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          errorMessage = data.message || errorMessage;
+        } else {
+          const text = await response.text();
+          console.error("Non-JSON error response:", text);
+        }
+        showAlert("URL Failed", errorMessage);
       }
     } catch (error) {
       console.error("URL processing failed", error);
