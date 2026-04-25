@@ -21,7 +21,7 @@ export async function processUrl(url: string): Promise<ProcessedUrl> {
   const reader = new Readability(dom.window.document);
   const article = reader.parse();
 
-  if (!article) {
+  if (!article || !article.content) {
     throw new Error('Failed to parse article content');
   }
 
