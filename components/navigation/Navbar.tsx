@@ -11,7 +11,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = session 
-    ? [{ name: "Dashboard", href: "/" }, { name: "My Library", href: "/library" }]
+    ? [{ name: "Dashboard", href: "/" }, { name: "My Library", href: "/library" }, { name: "Settings", href: "/settings" }]
     : [{ name: "Features", href: "#features" }, { name: "About", href: "#about" }];
 
   return (

@@ -36,6 +36,20 @@ export default function ReaderClient({ document }: ReaderClientProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    const savedPrefs = localStorage.getItem("deep-read-settings");
+    if (savedPrefs) {
+      try {
+        const parsed = JSON.parse(savedPrefs);
+        if (parsed.fontSize) setFontSize(parsed.fontSize);
+        if (parsed.theme) setTheme(parsed.theme);
+        if (parsed.bionicReading !== undefined) setIsBionic(parsed.bionicReading);
+      } catch (e) {
+        console.error("Failed to load settings", e);
+      }
+    }
+  }, []);
+
   const extractText = useCallback(async (blob: Blob) => {
     try {
       const arrayBuffer = await blob.arrayBuffer();
@@ -237,7 +251,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
           <div className="h-[calc(100vh-200px)] w-full rounded-[32px] overflow-hidden border border-border shadow-2xl transition-all duration-500">
             {pdfUrl && (
               <iframe 
-                src={`${pdfUrl}#page=${currentPage}`} 
+                src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0`} 
                 className="w-full h-full"
                 title="Source PDF"
               />
