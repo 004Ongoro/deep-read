@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FileText, ArrowRight, Clock, Search, Trash2 } from "lucide-react";
+import Modal from "@/components/ui/Modal";
 
 interface IDocument {
   _id: string;
@@ -18,17 +19,29 @@ interface LibraryClientProps {
 export default function LibraryClient({ initialDocuments }: LibraryClientProps) {
   const [documents, setDocuments] = useState<IDocument[]>(initialDocuments);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
 
-  const handleDelete = async (docId: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+  const confirmDelete = (docId: string) => {
+    setDocumentToDelete(docId);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!documentToDelete) return;
     
     try {
-      const response = await fetch(`/api/documents/delete?id=${docId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/documents/delete?id=${documentToDelete}`, { method: 'DELETE' });
       if (response.ok) {
-        setDocuments(documents.filter(d => d._id !== docId));
+        setDocuments(documents.filter(d => d._id !== documentToDelete));
       }
     } catch (error) {
       console.error("Delete failed", error);
+    } finally {
+      setIsModalOpen(false);
+      setDocumentToDelete(null);
     }
   };
 
@@ -88,7 +101,7 @@ export default function LibraryClient({ initialDocuments }: LibraryClientProps) 
                 </div>
                 <div className="flex items-center gap-3 flex-1 md:flex-none">
                   <button 
-                    onClick={() => handleDelete(doc._id)}
+                    onClick={() => confirmDelete(doc._id)}
                     className="rounded-2xl border border-border p-4 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={20} />
@@ -120,6 +133,20 @@ export default function LibraryClient({ initialDocuments }: LibraryClientProps) 
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setDocumentToDelete(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete Document"
+        description="Are you sure you want to permanently delete this document from your library? Your reading progress will be lost. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Keep Document"
+        type="confirm"
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Book, ArrowRight, FileText, Trash2 } from "lucide-react";
 import { ingestDocument } from "@/lib/utils/pdf-handler";
 import { useSession } from "next-auth/react";
+import Modal from "@/components/ui/Modal";
 
 interface IDocument {
   _id: string;
@@ -25,17 +26,48 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
   const { data: session } = useSession();
   const [documents, setDocuments] = useState<IDocument[]>(initialDocuments);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Modal state
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    type: "confirm" as "alert" | "confirm",
+    title: "",
+    description: "",
+    docId: null as string | null,
+  });
 
-  const handleDelete = async (docId: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+  const confirmDelete = (docId: string) => {
+    setModalConfig({
+      isOpen: true,
+      type: "confirm",
+      title: "Delete Document",
+      description: "Are you sure you want to permanently delete this document? Your reading progress will be lost.",
+      docId
+    });
+  };
+
+  const showAlert = (title: string, description: string) => {
+    setModalConfig({
+      isOpen: true,
+      type: "alert",
+      title,
+      description,
+      docId: null
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!modalConfig.docId) return;
     
     try {
-      const response = await fetch(`/api/documents/delete?id=${docId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/documents/delete?id=${modalConfig.docId}`, { method: 'DELETE' });
       if (response.ok) {
-        setDocuments(documents.filter(d => d._id !== docId));
+        setDocuments(documents.filter(d => d._id !== modalConfig.docId));
       }
     } catch (error) {
       console.error("Delete failed", error);
+    } finally {
+      setModalConfig({ ...modalConfig, isOpen: false, docId: null });
     }
   };
 
@@ -50,7 +82,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
       setDocuments([newDoc, ...documents]);
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Failed to process PDF. Ensure it's a valid digital document.");
+      showAlert("Upload Failed", "Failed to process PDF. Ensure it's a valid digital document.");
     } finally {
       setIsUploading(false);
     }
@@ -76,7 +108,7 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <button 
-                      onClick={() => handleDelete(doc._id)}
+                      onClick={() => confirmDelete(doc._id)}
                       className="rounded-xl p-2 text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
                     >
                       <Trash2 size={18} />
@@ -155,6 +187,17 @@ export default function DashboardClient({ initialDocuments }: DashboardClientPro
           </label>
         </div>
       </section>
+
+      <Modal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false, docId: null })}
+        onConfirm={modalConfig.type === "confirm" ? handleDelete : undefined}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type={modalConfig.type}
+      />
     </div>
   );
 }

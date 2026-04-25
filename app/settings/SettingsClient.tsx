@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Mail, Save, Loader2, BookOpen, Type, Sun, CheckCircle2 } from "lucide-react";
+import { User, Mail, Save, Loader2, BookOpen, Type, Sun, CheckCircle2, Lock, FileText } from "lucide-react";
 
 interface SettingsClientProps {
   user: {
@@ -15,10 +15,18 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState({ text: "", type: "" });
 
+  // Password Change
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState({ text: "", type: "" });
+
   // Reading Preferences
   const [fontSize, setFontSize] = useState(20);
   const [theme, setTheme] = useState<"light" | "sepia">("light");
   const [bionicReading, setBionicReading] = useState(false);
+  const [defaultReferenceView, setDefaultReferenceView] = useState(false);
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
   const [prefsMessage, setPrefsMessage] = useState({ text: "", type: "" });
 
@@ -30,6 +38,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
         if (parsed.fontSize) setFontSize(parsed.fontSize);
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.bionicReading !== undefined) setBionicReading(parsed.bionicReading);
+        if (parsed.defaultReferenceView !== undefined) setDefaultReferenceView(parsed.defaultReferenceView);
       } catch (e) {
         console.error("Failed to parse settings");
       }
@@ -60,11 +69,45 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     }
   };
 
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ text: "New passwords do not match", type: "error" });
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    setPasswordMessage({ text: "", type: "" });
+    
+    try {
+      const res = await fetch("/api/user/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setPasswordMessage({ text: "Password changed successfully! A confirmation email has been sent.", type: "success" });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        setPasswordMessage({ text: data.message || "Failed to change password", type: "error" });
+      }
+    } catch (err) {
+      setPasswordMessage({ text: "Network error occurred", type: "error" });
+    } finally {
+      setIsChangingPassword(false);
+      setTimeout(() => setPasswordMessage({ text: "", type: "" }), 5000);
+    }
+  };
+
   const handleSavePreferences = () => {
     setIsSavingPrefs(true);
     setPrefsMessage({ text: "", type: "" });
     try {
-      const prefs = { fontSize, theme, bionicReading };
+      const prefs = { fontSize, theme, bionicReading, defaultReferenceView };
       localStorage.setItem("deep-read-settings", JSON.stringify(prefs));
       setPrefsMessage({ text: "Reading preferences saved!", type: "success" });
     } catch (e) {
@@ -125,6 +168,75 @@ export default function SettingsClient({ user }: SettingsClientProps) {
               <span className={`text-sm font-bold flex items-center gap-1 ${profileMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
                 {profileMessage.type === 'success' && <CheckCircle2 size={16} />}
                 {profileMessage.text}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Security Settings */}
+      <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <h2 className="mb-6 text-2xl font-bold text-foreground flex items-center gap-2">
+          <Lock size={24} className="text-accent" /> Security & Recovery
+        </h2>
+        <p className="text-muted-foreground mb-8">Update your password to keep your account secure. We will send an email confirmation to your registered email address.</p>
+        
+        <div className="space-y-6 max-w-xl">
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Current Password</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+              <input 
+                type="password" 
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">New Password</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+              <input 
+                type="password" 
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/70 ml-1">Confirm New Password</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" size={20} />
+              <input 
+                type="password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-2xl border border-border bg-muted/20 py-4 pl-12 pr-6 outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-foreground"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pt-2">
+            <button 
+              onClick={handleChangePassword}
+              disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+              className="flex items-center gap-2 rounded-xl bg-foreground px-8 py-3 font-bold text-background hover:opacity-90 disabled:opacity-50 transition-all active:scale-95 shadow-lg"
+            >
+              {isChangingPassword ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              Change Password
+            </button>
+            {passwordMessage.text && (
+              <span className={`text-sm font-bold flex items-center gap-1 ${passwordMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+                {passwordMessage.type === 'success' && <CheckCircle2 size={16} />}
+                {passwordMessage.text}
               </span>
             )}
           </div>
@@ -200,7 +312,26 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 pt-6">
+          {/* Default Reference View */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-black uppercase tracking-[0.1em] text-foreground flex items-center gap-2">
+                  <FileText size={18} className="text-muted-foreground" /> Default to Reference View
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">Always open documents in the original source PDF view.</p>
+              </div>
+              
+              <button 
+                onClick={() => setDefaultReferenceView(!defaultReferenceView)}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${defaultReferenceView ? 'bg-accent' : 'bg-muted-foreground/30'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${defaultReferenceView ? 'translate-x-8' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pt-6 border-t border-border">
             <button 
               onClick={handleSavePreferences}
               disabled={isSavingPrefs}

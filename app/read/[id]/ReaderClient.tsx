@@ -44,6 +44,7 @@ export default function ReaderClient({ document }: ReaderClientProps) {
         if (parsed.fontSize) setFontSize(parsed.fontSize);
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.bionicReading !== undefined) setIsBionic(parsed.bionicReading);
+        if (parsed.defaultReferenceView !== undefined) setIsReferenceView(parsed.defaultReferenceView);
       } catch (e) {
         console.error("Failed to load settings", e);
       }
